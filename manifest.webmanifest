@@ -1,0 +1,14 @@
+{
+  "name": "Miracardiac Clinical Workspace",
+  "short_name": "Miracardiac",
+  "description": "A premium, safety-first clinical calculation workspace.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f8fb",
+  "theme_color": "#0b6f73",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
