@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Dashboard · Miracardiac</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6f73">
+<link rel="manifest" href="public/manifest.webmanifest">
+<link rel="icon" href="public/icon-192.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Manrope','sans-serif']},colors:{teal:'#0b6f73',ink:'#172b3b'}}}};
+</script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{background:radial-gradient(circle at 80% 0,#eaf8f5,transparent 26rem),#f5f8fb}
+.glass{background:#ffffffdd;backdrop-filter:blur(12px)}
+.toast{animation:in .25s}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body class="min-w-[320px] text-ink font-sans">
+<div class="md:grid md:grid-cols-[250px_1fr]">
+
+  <!-- SIDEBAR -->
+  <aside class="border-b border-slate-200 bg-white p-4 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:p-6">
+    <a href="index.html" class="flex items-center gap-3 pb-6 no-underline">
+      <b class="grid h-10 w-10 place-items-center rounded-[13px] bg-gradient-to-br from-[#1b9a91] to-teal font-display text-xl text-white shadow-lg">M</b>
+      <span class="hidden md:block">
+        <strong class="block font-display">Miracardiac</strong>
+        <small class="text-[8px] font-extrabold tracking-widest text-slate-400">CLINICAL INTELLIGENCE</small>
+      </span>
+    </a>
+    <nav class="hidden md:block">
+      <p class="text-[9px] font-extrabold tracking-widest text-slate-400">WORKSPACE</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="dashboard.html">⌘ Dashboard</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="calculator.html">＋ Calculator</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="patient-records.html">📋 Patient records</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="medication.html">💊 Drug follow-up</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="handover.html">🔄 Shift handover</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="customer-care.html">♡ Customer care</a>
+      <p class="mt-5 text-[9px] font-extrabold tracking-widest text-slate-400">MANAGEMENT</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="admin.html">⚙　Admin studio</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="settings.html">◐　Settings</a>
+    </nav>
+    <div class="mt-auto hidden md:block">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-[10px] text-[#958b7c]">
+        <b class="text-[#976f39]">✦ Safety first</b>
+        <p class="mt-1">Decision support only. Verify local policy and patient context.</p>
+      </div>
+      <button id="install" hidden class="mt-3 w-full rounded-lg border border-[#cfe8e3] bg-[#f1fbf8] p-2 text-[10px] font-bold text-teal">⇩ Install app</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <header class="glass sticky top-0 z-10 flex min-h-[76px] items-center justify-between border-b border-slate-200 px-5 md:px-[4vw]">
+      <div>
+        <small class="font-bold tracking-widest text-slate-400">MIRACARDIAC / <b class="text-teal">WORKSPACE</b></small>
+        <h1 class="font-display font-extrabold">Dashboard</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="user-pill" class="hidden rounded-full border border-[#d3eee7] bg-[#f1faf7] px-3 py-2 text-[10px] font-bold text-[#43836f] sm:block">Local session</span>
+        <button id="logout" class="text-[10px] font-bold text-slate-500">Log out</button>
+        <b class="grid h-8 w-8 place-items-center rounded-full bg-[#dceef0] text-[10px] text-[#376a77]">MC</b>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-6xl px-5 py-10 md:px-[4vw]">
+      <p class="text-[10px] font-extrabold tracking-widest text-teal">OVERVIEW</p>
+      <h2 id="greeting" class="mt-2 font-display text-4xl font-extrabold">Good morning, care team.</h2>
+      <p class="mt-2 text-sm text-slate-500">Your clinical workspace at a glance.</p>
+
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <a href="calculator.html" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-[#aadbd2]">
+          <span class="text-2xl text-teal">＋</span>
+          <h3 class="mt-5 font-display font-extrabold">Start calculation</h3>
+          <p class="mt-2 text-xs text-slate-400">20+ validated clinical calculators.</p>
+        </a>
+        <a href="patient-records.html" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-[#aadbd2]">
+          <span class="text-2xl text-teal">📋</span>
+          <h3 class="mt-5 font-display font-extrabold">Patient records</h3>
+          <p class="mt-2 text-xs text-slate-400">Vitals, reminders & dept notes.</p>
+        </a>
+        <a href="medication.html" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-[#aadbd2]">
+          <span class="text-2xl text-teal">💊</span>
+          <h3 class="mt-5 font-display font-extrabold">Drug follow-up</h3>
+          <p class="mt-2 text-xs text-slate-400">MAR-style medication log.</p>
+        </a>
+        <a href="handover.html" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-[#aadbd2]">
+          <span class="text-2xl text-teal">🔄</span>
+          <h3 class="mt-5 font-display font-extrabold">Shift handover</h3>
+          <p class="mt-2 text-xs text-slate-400">SBAR-style team handover notes.</p>
+        </a>
+        <a href="customer-care.html" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-[#aadbd2]">
+          <span class="text-2xl text-teal">♡</span>
+          <h3 class="mt-5 font-display font-extrabold">Contact care</h3>
+          <p class="mt-2 text-xs text-slate-400">Send a support message securely.</p>
+        </a>
+        <a href="admin.html" class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-[#aadbd2]">
+          <span class="text-2xl text-teal">⚙</span>
+          <h3 class="mt-5 font-display font-extrabold">Admin studio</h3>
+          <p class="mt-2 text-xs text-slate-400">Manage brand assets and campaigns.</p>
+        </a>
+      </div>
+
+      <section class="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+        <p class="text-[10px] font-extrabold tracking-widest text-teal">RECENT ACTIVITY</p>
+        <div id="recent" class="mt-4"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+const CONFIG={firebase:{apiKey:'',authDomain:'',projectId:'',storageBucket:'',messagingSenderId:'',appId:''},cloudinary:{cloudName:'',uploadPreset:''}};
+const $=s=>document.querySelector(s);
+const toast=(x,b=false)=>{let n=document.createElement('div');n.className='toast fixed bottom-5 right-5 z-50 rounded-xl px-4 py-3 text-xs text-white shadow-2xl '+(b?'bg-red-700':'bg-[#183b4a]');n.textContent=x;document.body.append(n);setTimeout(()=>n.remove(),3500)};
+if($('#logout'))$('#logout').onclick=()=>{localStorage.removeItem('mc-user');location.href='login.html'};
+if($('#user-pill'))$('#user-pill').textContent=localStorage.getItem('mc-user')||'Guest mode';
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('public/sw.js').catch(()=>{}));
+
+// Greeting follows the time of day
+const hr=new Date().getHours();
+$('#greeting').textContent=(hr<12?'Good morning':hr<18?'Good afternoon':'Good evening')+', care team.';
+
+// Recent activity: reads the new calculator history (mc-history-v2)
+let h=[];
+try{h=JSON.parse(localStorage.getItem('mc-history-v2')||'[]')}catch(e){h=[]}
+$('#recent').innerHTML=h.length
+  ?h.slice(0,5).map(x=>`<div class="flex justify-between gap-3 border-b border-slate-100 py-3 text-xs"><span>${x.label}<small class="ml-2 text-slate-400">${new Date(x.createdAt).toLocaleString()}</small></span><b class="text-teal">${x.text}</b></div>`).join('')
+  :'<p class="text-xs text-slate-400">No calculations yet. Start with the calculator.</p>';
+</script>
+</body>
+</html>

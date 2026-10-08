@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Calculator · Miracardiac</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6f73">
+<link rel="manifest" href="public/manifest.webmanifest">
+<link rel="icon" href="public/icon-192.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Manrope','sans-serif']},colors:{teal:'#0b6f73',ink:'#172b3b'}}}};
+</script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{background:linear-gradient(120deg,#e3f7f3,#e4edff,#f1e6ff,#ffe6f0,#fff1dc,#e3f7f3);background-size:300% 300%;animation:flow 22s ease infinite}
+@keyframes flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#shell{position:relative;z-index:1}
+.glass{background:#ffffffdd;backdrop-filter:blur(12px)}
+.toast{animation:in .25s}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#chips::-webkit-scrollbar{display:none}
+.aurora{background:linear-gradient(120deg,#0b6f73,#2563eb,#7c3aed,#db2777,#ea580c,#0b6f73);background-size:300% 300%;animation:flow 14s ease infinite}
+.heart-pulse{animation:hp 1s ease-in-out infinite;display:inline-block}
+@keyframes hp{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}45%{transform:scale(1.18)}}
+.tile{min-width:62px}
+.blink{animation:bl 1s steps(2,start) infinite}
+@keyframes bl{to{opacity:.35}}
+@media (prefers-reduced-motion:reduce){body,.aurora,.heart-pulse,.blink{animation:none}}
+</style>
+</head>
+<body class="min-w-[320px] text-ink font-sans">
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<div id="shell" class="md:grid md:grid-cols-[250px_1fr]">
+
+  <!-- SIDEBAR -->
+  <aside class="border-b border-slate-200 bg-white p-4 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:p-6">
+    <a href="index.html" class="flex items-center gap-3 pb-6 no-underline">
+      <b id="side-logo" class="grid h-10 w-10 place-items-center overflow-hidden rounded-[13px] bg-gradient-to-br from-[#1b9a91] to-teal font-display text-xl text-white shadow-lg">M</b>
+      <span class="hidden md:block">
+        <strong class="block font-display">Miracardiac</strong>
+        <small class="text-[8px] font-extrabold tracking-widest text-slate-400">CLINICAL INTELLIGENCE</small>
+      </span>
+    </a>
+    <nav class="hidden md:block">
+      <p class="text-[9px] font-extrabold tracking-widest text-slate-400">WORKSPACE</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="dashboard.html">⌘ Dashboard</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="calculator.html">＋ Calculator</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="patient-records.html">📋 Patient records</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="medication.html">💊 Drug follow-up</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="handover.html">🔄 Shift handover</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="customer-care.html">♡ Customer care</a>
+      <p class="mt-5 text-[9px] font-extrabold tracking-widest text-slate-400">MANAGEMENT</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="admin.html">⚙　Admin studio</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="settings.html">◐　Settings</a>
+    </nav>
+    <div class="mt-auto hidden md:block">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-[10px] text-[#958b7c]">
+        <b class="text-[#976f39]">✦ Safety first</b>
+        <p class="mt-1">Decision support only. Verify local policy and patient context.</p>
+      </div>
+      <button id="install" hidden class="mt-3 w-full rounded-lg border border-[#cfe8e3] bg-[#f1fbf8] p-2 text-[10px] font-bold text-teal">⇩ Install app</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <header class="glass sticky top-0 z-10 flex min-h-[76px] items-center justify-between border-b border-slate-200 px-5 md:px-[4vw]">
+      <div>
+        <small class="font-bold tracking-widest text-slate-400">MIRACARDIAC / <b class="text-teal">WORKSPACE</b></small>
+        <h1 class="font-display font-extrabold">Clinical calculator</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="user-pill" class="hidden rounded-full border border-[#d3eee7] bg-[#f1faf7] px-3 py-2 text-[10px] font-bold text-[#43836f] sm:block">Local session</span>
+        <button id="logout" class="text-[10px] font-bold text-slate-500">Log out</button>
+        <b class="grid h-8 w-8 place-items-center rounded-full bg-[#dceef0] text-[10px] text-[#376a77]">MC</b>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-6xl px-5 py-8 md:px-[4vw]">
+
+      <!-- LIVE CLOCK -->
+      <section class="aurora mb-6 overflow-hidden rounded-2xl p-5 text-white shadow-lg md:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="flex items-center gap-2 text-[10px] font-extrabold tracking-widest text-white/80"><span class="heart-pulse text-base text-pink-200">♥</span> LIVE CLINICAL TIME</p>
+            <p id="dateline" class="mt-1 text-sm font-bold"></p>
+            <p id="tz" class="text-[10px] text-white/70"></p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="tile rounded-xl bg-white/20 px-3 py-2 text-center backdrop-blur"><b id="hh" class="block font-display text-3xl tabular-nums">00</b><small class="text-[9px] font-bold tracking-widest text-white/80">HOURS</small></div>
+            <span class="blink font-display text-2xl font-bold">:</span>
+            <div class="tile rounded-xl bg-white/20 px-3 py-2 text-center backdrop-blur"><b id="mm" class="block font-display text-3xl tabular-nums">00</b><small class="text-[9px] font-bold tracking-widest text-white/80">MINUTES</small></div>
+            <span class="blink font-display text-2xl font-bold">:</span>
+            <div class="tile rounded-xl bg-white/30 px-3 py-2 text-center backdrop-blur"><b id="ss" class="block font-display text-3xl tabular-nums">00</b><small class="text-[9px] font-bold tracking-widest text-white/80">SECONDS</small></div>
+            <div class="ml-1 grid gap-1 text-center">
+              <span id="ampm" class="text-[10px] font-extrabold tracking-widest">AM</span>
+              <button id="fmt" type="button" class="rounded-lg bg-white/25 px-2 py-1 text-[10px] font-bold backdrop-blur">12h / 24h</button>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 h-1 overflow-hidden rounded-full bg-white/25"><div id="secbar" class="h-full rounded-full bg-white" style="width:0%;transition:width .25s linear"></div></div>
+      </section>
+
+      <!-- Department chips + tool buttons -->
+      <p class="mb-2 text-[10px] font-extrabold tracking-widest text-slate-400">DEPARTMENT</p>
+      <div id="chips" class="flex gap-2 overflow-x-auto pb-2"></div>
+      <p class="mb-2 mt-4 text-[10px] font-extrabold tracking-widest text-slate-400">CHOOSE A CALCULATOR</p>
+      <div id="tools" class="grid grid-cols-2 gap-2 md:grid-cols-4"></div>
+
+      <section class="mt-6 grid gap-4 lg:grid-cols-[1fr_340px]">
+        <!-- Input card -->
+        <div class="rounded-2xl border border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
+          <div class="border-b border-slate-100 p-6">
+            <p class="text-[10px] font-extrabold tracking-widest text-teal">VALIDATED FORMULA</p>
+            <h2 id="title" class="mt-2 font-display text-xl font-extrabold"></h2>
+            <p id="sub" class="mt-1 text-xs text-slate-400"></p>
+            <div class="mt-4 rounded-xl border border-[#d3eee7] bg-[#f1faf7] p-3 text-xs text-slate-600">
+              <b class="text-teal">Why it matters:</b> <span id="why"></span>
+            </div>
+          </div>
+          <form id="calc" class="p-6">
+            <div id="fields" class="grid gap-4 sm:grid-cols-2"></div>
+            <div class="mt-6 grid grid-cols-[1fr_auto] gap-2">
+              <button class="rounded-xl bg-teal py-3 text-xs font-bold text-white">Calculate result →</button>
+              <button type="button" id="example" class="rounded-xl border border-[#cfe8e3] bg-[#f1fbf8] px-4 text-xs font-bold text-teal">Fill example</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Result card -->
+        <aside class="rounded-2xl border border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
+          <div class="border-b border-slate-100 p-6">
+            <p class="text-[10px] font-extrabold tracking-widest text-teal">RESULT</p>
+            <h3 id="result-title" class="mt-2 font-display font-extrabold">Ready when you are</h3>
+          </div>
+          <div id="result" class="p-6 text-xs text-slate-400">Enter values (or tap “Fill example”) to see an explainable result.</div>
+        </aside>
+      </section>
+
+      <!-- History -->
+      <section class="mt-4 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+        <div class="flex justify-between">
+          <h3 class="font-display font-extrabold">Calculation history</h3>
+          <button id="clear" class="text-xs font-bold text-teal">Clear all</button>
+        </div>
+        <div id="history" class="mt-4"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ---------- CONFIG & HELPERS ---------- */
+const CONFIG={firebase:{apiKey:'',authDomain:'',projectId:'',storageBucket:'',messagingSenderId:'',appId:''},cloudinary:{cloudName:'',uploadPreset:''}};
+const $=s=>document.querySelector(s);
+const toast=(x,b=false)=>{let n=document.createElement('div');n.className='toast fixed bottom-5 right-5 z-50 rounded-xl px-4 py-3 text-xs text-white shadow-2xl '+(b?'bg-red-700':'bg-[#183b4a]');n.textContent=x;document.body.append(n);setTimeout(()=>n.remove(),3500)};
+if($('#logout'))$('#logout').onclick=()=>{localStorage.removeItem('mc-user');location.href='login.html'};
+if($('#user-pill'))$('#user-pill').textContent=localStorage.getItem('mc-user')||'Guest mode';
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('public/sw.js').catch(()=>{}));
+
+// number/text formatting
+const fmt=(x,d=2)=>typeof x==='string'?x:(!Number.isFinite(x)?'—':x.toLocaleString('en-US',{maximumFractionDigits:d}));
+const R=(x,d=2)=>fmt(x,d);
+// field builders: F = number field, S = dropdown. z:1 means 0 is allowed (optional field)
+const F=(k,l,u,e,o={})=>({k,l,u,e,...o});
+const S=(k,l,o,e)=>({k,l,t:'select',o,e});
+const iso=d=>d.toISOString().slice(0,10);
+
+/* ---------- DEPARTMENTS ---------- */
+const GROUPS={gen:'General',pharm:'Pharmacy & Nursing',phys:'Physicians',surg:'Surgery',rad:'Radiology',him:'HIM & Stats'};
+
+/* ---------- CALCULATORS ----------
+ Each tool: g=department, t=title, s=subtitle, why=plain-language reason, f=formula text,
+ fields=inputs, run(v) returns {out:[{l,v,u,d}], steps:[], note, warn}. First "out" is the main result. */
+const T={
+
+/* ===== GENERAL ===== */
+bmi:{g:'gen',t:'Body mass index',s:'Weight and height screening metric',
+ why:'BMI compares weight to height. It is a quick screening number, not a diagnosis.',
+ f:'BMI = weight (kg) ÷ height (m)²',
+ fields:[F('weight','Weight','kg','70'),F('height','Height','cm','175')],
+ run(v){const m=v.height/100,x=v.weight/(m*m);
+  const c=x<18.5?'Below usual range (underweight)':x<25?'Usual adult range':x<30?'Above usual range (overweight)':'Obesity range';
+  return{out:[{l:'Body mass index',v:x,u:'kg/m²'},{l:'Category',v:c}],
+   steps:[`Convert height to metres: ${v.height} ÷ 100 = ${R(m)} m.`,`Square the height: ${R(m)} × ${R(m)} = ${R(m*m,3)}.`,`Divide weight by that: ${v.weight} ÷ ${R(m*m,3)} = ${R(x)} kg/m².`],
+   note:'Adult cut-offs: under 18.5, 18.5–24.9, 25–29.9, 30 and above. For children use age- and sex-specific percentile charts.'}}},
+
+bsa:{g:'gen',t:'Body surface area',s:'Mosteller formula',
+ why:'Chemotherapy, burns care and some cardiac measures are scaled to body surface area, not just weight.',
+ f:'BSA (m²) = √( height (cm) × weight (kg) ÷ 3600 )',
+ fields:[F('weight','Weight','kg','70'),F('height','Height','cm','175')],
+ run(v){const p=v.height*v.weight,x=Math.sqrt(p/3600);
+  return{out:[{l:'Body surface area',v:x,u:'m²',d:2}],
+   steps:[`Multiply height × weight: ${v.height} × ${v.weight} = ${R(p,0)}.`,`Divide by 3600: ${R(p,0)} ÷ 3600 = ${R(p/3600,4)}.`,`Take the square root: √${R(p/3600,4)} = ${R(x,3)} m².`],
+   note:'Average adult is about 1.7 m².'}}},
+
+ibw:{g:'gen',t:'Ideal & adjusted body weight',s:'Devine formula',
+ why:'Some drug doses and ventilator settings use ideal weight, because fat tissue does not clear drugs the same way.',
+ f:'IBW = 50 (male) or 45.5 (female) + 2.3 × inches over 60 · Adjusted = IBW + 0.4 × (actual − IBW)',
+ fields:[F('height','Height','cm','175'),S('base','Sex',[[50,'Male'],[45.5,'Female']],50),F('actual','Actual weight (optional)','kg','90',{z:1})],
+ run(v){const inch=v.height/2.54,ibw=v.base+2.3*(inch-60);
+  const out=[{l:'Ideal body weight',v:ibw,u:'kg'}],steps=[`Height in inches: ${v.height} ÷ 2.54 = ${R(inch,1)} in.`,`Inches over 60: ${R(inch-60,1)}.`,`IBW = ${v.base} + 2.3 × ${R(inch-60,1)} = ${R(ibw)} kg.`];
+  if(v.actual>0){const adj=ibw+0.4*(v.actual-ibw);
+   out.push({l:'% of ideal weight',v:v.actual/ibw*100,u:'%',d:0},{l:'Adjusted body weight',v:adj,u:'kg'});
+   steps.push(`Adjusted = ${R(ibw)} + 0.4 × (${v.actual} − ${R(ibw)}) = ${R(adj)} kg.`)}
+  return{out,steps,note:'Policies differ on when to use adjusted weight (often when actual weight is well above ideal). Follow your local protocol.',
+   warn:inch<60?'Formula is designed for height of 60 in (152 cm) or more; result may be unreliable.':''}}},
+
+/* ===== PHARMACY & NURSING ===== */
+infusion:{g:'pharm',t:'IV infusion & drip rate',s:'mL/hr, mL/min, mL/sec, drops/min, drops/sec, seconds per drop',
+ why:'A pump is set in mL per hour. A gravity drip set is counted in drops per minute. Both come from the same two facts: how much fluid, and how long.',
+ f:'mL/hr = volume ÷ hours · drops/min = volume × drop factor ÷ total minutes',
+ fields:[F('volume','Volume to give','mL','500'),F('hours','Duration – hours','h','4',{z:1}),F('minutes','Duration – extra minutes','min','0',{z:1}),
+  S('df','Drop factor (printed on IV set)',[[10,'10 gtt/mL (blood set)'],[15,'15 gtt/mL'],[20,'20 gtt/mL (common)'],[60,'60 gtt/mL (micro-drip)']],20)],
+ run(v){const m=v.hours*60+v.minutes;if(m<=0)throw Error('Enter a duration in hours and/or minutes.');
+  const hr=v.volume/(m/60),mn=v.volume/m,sc=mn/60,gm=v.volume*v.df/m;
+  return{out:[{l:'Pump rate',v:hr,u:'mL/hr'},{l:'Per minute',v:mn,u:'mL/min',d:3},{l:'Per second',v:sc,u:'mL/sec',d:4},
+   {l:'Drip rate',v:Math.round(gm),u:'drops/min',d:0},{l:'Drops per second',v:gm/60,u:'drops/sec'},{l:'Drops per hour',v:Math.round(gm*60),u:'drops/hr',d:0},{l:'One drop every',v:60/gm,u:'seconds',d:1}],
+   steps:[`Total time = ${v.hours} h × 60 + ${v.minutes} min = ${R(m,0)} minutes (${R(m/60)} h).`,
+    `mL per hour = ${v.volume} ÷ ${R(m/60)} h = ${R(hr)} mL/hr.`,
+    `mL per minute = ${R(hr)} ÷ 60 = ${R(mn,3)}; per second = ${R(mn,3)} ÷ 60 = ${R(sc,4)}.`,
+    `Drops per minute = ${v.volume} mL × ${v.df} gtt/mL ÷ ${R(m,0)} min = ${R(gm)} → round to ${Math.round(gm)} drops/min.`,
+    `Seconds per drop = 60 ÷ ${R(gm)} = ${R(60/gm,1)} s.`],
+   note:'Drip rates are rounded to whole drops. Check by counting drops for a full minute.',
+   warn:'Always verify against the written order and local policy.'}}},
+
+dose:{g:'pharm',t:'Weight-based dose',s:'Prescribed mg/kg × weight',
+ why:'Children and many adult drugs are dosed by body weight so each patient gets a proportionate amount.',
+ f:'Single dose = mg/kg × weight · Daily total = single dose × doses per day',
+ fields:[F('dose','Dose per kg','mg/kg','2'),F('weight','Patient weight','kg','70'),
+  S('times','Doses per day',[[1,'Once daily'],[2,'Twice daily (q12h)'],[3,'3 times daily (q8h)'],[4,'4 times daily (q6h)']],3),
+  F('max','Maximum single dose (0 = none)','mg','0',{z:1})],
+ run(v){const single=v.dose*v.weight,cap=v.max>0&&single>v.max,use=cap?v.max:single,daily=use*v.times;
+  return{out:[{l:'Single dose',v:use,u:'mg'},{l:'Daily total',v:daily,u:'mg/day'},{l:'Daily per kg',v:daily/v.weight,u:'mg/kg/day'}],
+   steps:[`Single dose = ${v.dose} mg/kg × ${v.weight} kg = ${R(single)} mg.`,cap?`That is above the maximum of ${v.max} mg, so the dose is capped at ${v.max} mg.`:'No maximum applied.',`Daily total = ${R(use)} mg × ${v.times} = ${R(daily)} mg.`],
+   note:'If the order is in mg/kg/day “divided”, divide the daily amount by the number of doses first.',
+   warn:cap?`Calculated dose (${R(single)} mg) exceeds the maximum single dose. Confirm with the prescriber.`:''}}},
+
+draw:{g:'pharm',t:'Dose → volume to draw up',s:'Ordered dose ÷ stock strength',
+ why:'Drugs come in set strengths (for example 500 mg in 5 mL). This tells you how many mL give the ordered dose.',
+ f:'Volume = ordered dose ÷ stock amount × stock volume',
+ fields:[F('dose','Ordered dose','mg','250'),F('stock','Stock amount on label','mg','500'),F('vol','Stock is dissolved in','mL','5')],
+ run(v){const c=v.stock/v.vol,x=v.dose/c;
+  return{out:[{l:'Volume to draw up',v:x,u:'mL',d:2},{l:'Stock concentration',v:c,u:'mg/mL'}],
+   steps:[`Concentration = ${v.stock} mg ÷ ${v.vol} mL = ${R(c)} mg/mL.`,`Volume = ${v.dose} mg ÷ ${R(c)} mg/mL = ${R(x)} mL.`],
+   warn:x>v.vol?'Dose is more than one container. Check the order and the label.':''}}},
+
+dilute:{g:'pharm',t:'Dilution (C₁V₁ = C₂V₂)',s:'How much stock and how much diluent',
+ why:'When a drug must be made weaker, you take a measured amount of strong stock and top up with diluent to the final volume.',
+ f:'Stock volume V₁ = (C₂ × V₂) ÷ C₁ · Diluent = V₂ − V₁',
+ fields:[F('c1','Stock concentration (C₁)','any unit','100'),F('c2','Desired concentration (C₂)','same unit','10'),F('v2','Final volume wanted (V₂)','mL','50')],
+ run(v){if(v.c2>v.c1)throw Error('Desired concentration cannot be higher than the stock.');
+  const v1=v.c2*v.v2/v.c1;
+  return{out:[{l:'Stock to measure (V₁)',v:v1,u:'mL'},{l:'Diluent to add',v:v.v2-v1,u:'mL'}],
+   steps:[`V₁ = (${v.c2} × ${v.v2}) ÷ ${v.c1} = ${R(v1)} mL.`,`Diluent = ${v.v2} − ${R(v1)} = ${R(v.v2-v1)} mL.`],
+   note:'Use the same concentration unit for C₁ and C₂ (for example both mg/mL).'}}},
+
+titrate:{g:'pharm',t:'Drug infusion by mcg/kg/min',s:'Convert dose to pump rate (mL/hr)',
+ why:'Critical-care drugs (for example dopamine, noradrenaline) are ordered per kg per minute, but pumps run in mL per hour.',
+ f:'Concentration (mcg/mL) = mg in bag × 1000 ÷ bag mL · mL/hr = dose × kg × 60 ÷ concentration',
+ fields:[F('dose','Ordered dose','mcg/kg/min','5'),F('weight','Patient weight','kg','70'),F('mg','Total drug in bag','mg','400'),F('bag','Total bag volume','mL','250')],
+ run(v){const c=v.mg*1000/v.bag,pm=v.dose*v.weight,hr=pm*60/c;
+  return{out:[{l:'Pump rate',v:hr,u:'mL/hr'},{l:'Drug per minute',v:pm,u:'mcg/min'},{l:'Bag concentration',v:c,u:'mcg/mL',d:0}],
+   steps:[`Concentration = ${v.mg} mg × 1000 ÷ ${v.bag} mL = ${R(c,0)} mcg/mL.`,`Drug per minute = ${v.dose} × ${v.weight} = ${R(pm)} mcg/min.`,`Per hour = ${R(pm)} × 60 = ${R(pm*60)} mcg/hr.`,`Rate = ${R(pm*60)} ÷ ${R(c,0)} = ${R(hr)} mL/hr.`],
+   warn:'High-alert medicine. Double-check with a second clinician and your drug library.'}}},
+
+peds:{g:'pharm',t:'Paediatric maintenance fluid (4-2-1)',s:'Hourly maintenance rate by weight',
+ why:'Children need fluid in proportion to weight. The 4-2-1 rule gives a safe hourly maintenance rate.',
+ f:'4 mL/kg/hr for first 10 kg + 2 mL/kg/hr for next 10 kg + 1 mL/kg/hr for each kg above 20',
+ fields:[F('weight','Child weight','kg','23')],
+ run(v){const a=Math.min(v.weight,10)*4,b=Math.min(Math.max(v.weight-10,0),10)*2,c=Math.max(v.weight-20,0),hr=a+b+c;
+  return{out:[{l:'Maintenance rate',v:hr,u:'mL/hr'},{l:'Per 24 hours',v:hr*24,u:'mL/day',d:0}],
+   steps:[`First 10 kg: ${R(Math.min(v.weight,10),1)} × 4 = ${R(a)}.`,`Next 10 kg: ${R(Math.min(Math.max(v.weight-10,0),10),1)} × 2 = ${R(b)}.`,`Above 20 kg: ${R(Math.max(v.weight-20,0),1)} × 1 = ${R(c)}.`,`Total = ${R(hr)} mL/hr; × 24 = ${R(hr*24,0)} mL/day.`],
+   note:'Maintenance only. Add deficits or ongoing losses separately; newborns follow different protocols.'}}},
+
+/* ===== PHYSICIANS ===== */
+crcl:{g:'phys',t:'Creatinine clearance',s:'Cockcroft–Gault estimate',
+ why:'The kidneys clear many drugs. A low clearance means doses may need reducing to avoid toxicity.',
+ f:'CrCl = ((140 − age) × weight) ÷ (72 × SCr) × 0.85 if female',
+ fields:[F('age','Age','years','58'),F('weight','Weight','kg','72'),F('scr','Serum creatinine','mg/dL','1.0'),S('sex','Sex factor',[[1,'Male / default'],[0.85,'Female factor (× 0.85)']],1)],
+ run(v){const x=((140-v.age)*v.weight/(72*v.scr))*v.sex;
+  return{out:[{l:'Estimated creatinine clearance',v:x,u:'mL/min'}],
+   steps:[`140 − age = ${140-v.age}.`,`× weight = ${R((140-v.age)*v.weight,0)}.`,`÷ (72 × ${v.scr}) = ${R((140-v.age)*v.weight/(72*v.scr))}.`,v.sex===1?'Male: no extra factor.':'Female: × 0.85.',`Result = ${R(x)} mL/min.`],
+   note:'Uses actual weight. Some protocols use ideal or adjusted weight in obesity. Use alongside local prescribing guidance.'}}},
+
+egfr:{g:'phys',t:'eGFR (CKD-EPI 2021)',s:'Race-free kidney function estimate',
+ why:'eGFR stages chronic kidney disease. Lower values mean the kidneys filter less blood each minute.',
+ f:'142 × min(SCr/κ,1)^α × max(SCr/κ,1)^−1.200 × 0.9938^age × 1.012 if female',
+ fields:[F('age','Age','years','58'),F('scr','Serum creatinine','mg/dL','1.0'),S('sex','Sex',[['m','Male'],['f','Female']],'m')],
+ run(v){const f=v.sex==='f',k=f?0.7:0.9,a=f?-0.241:-0.302,q=v.scr/k;
+  const x=142*Math.pow(Math.min(q,1),a)*Math.pow(Math.max(q,1),-1.2)*Math.pow(0.9938,v.age)*(f?1.012:1);
+  const st=x>=90?'G1 (normal or high)':x>=60?'G2 (mildly decreased)':x>=45?'G3a (mild–moderate)':x>=30?'G3b (moderate–severe)':x>=15?'G4 (severely decreased)':'G5 (kidney failure)';
+  return{out:[{l:'eGFR',v:x,u:'mL/min/1.73m²',d:0},{l:'CKD stage by GFR',v:st}],
+   steps:[`κ = ${k}, α = ${a} (${f?'female':'male'}).`,`SCr ÷ κ = ${v.scr} ÷ ${k} = ${R(q,3)}.`,`Apply the formula with age ${v.age}${f?' and the female factor 1.012':''}.`,`eGFR = ${R(x,0)} mL/min/1.73 m².`],
+   note:'Staging needs the result to persist over 3 months and should also consider urine albumin.'}}},
+
+map:{g:'phys',t:'Mean arterial pressure',s:'Perfusion pressure and pulse pressure',
+ why:'MAP is the average pressure pushing blood into organs. Many ICU targets aim for 65 mmHg or higher.',
+ f:'MAP = (SBP + 2 × DBP) ÷ 3 · Pulse pressure = SBP − DBP',
+ fields:[F('systolic','Systolic BP','mmHg','120'),F('diastolic','Diastolic BP','mmHg','80')],
+ run(v){if(v.systolic<=v.diastolic)throw Error('Systolic must be higher than diastolic.');
+  const m=(v.systolic+2*v.diastolic)/3;
+  return{out:[{l:'Mean arterial pressure',v:m,u:'mmHg'},{l:'Pulse pressure',v:v.systolic-v.diastolic,u:'mmHg',d:0}],
+   steps:[`2 × diastolic = ${2*v.diastolic}.`,`Add systolic: ${v.systolic} + ${2*v.diastolic} = ${v.systolic+2*v.diastolic}.`,`Divide by 3 = ${R(m)} mmHg.`,`Pulse pressure = ${v.systolic} − ${v.diastolic} = ${v.systolic-v.diastolic}.`],
+   note:m>=65?'At or above the common reference of 65 mmHg.':'Below the common reference of 65 mmHg.'}}},
+
+anion:{g:'phys',t:'Anion gap',s:'With optional albumin correction',
+ why:'The anion gap helps find the cause of metabolic acidosis, for example lactate, ketones, kidney failure or toxins.',
+ f:'AG = Na − (Cl + HCO₃) · Corrected AG = AG + 2.5 × (4.0 − albumin g/dL)',
+ fields:[F('na','Sodium','mmol/L','140'),F('cl','Chloride','mmol/L','104'),F('hco3','Bicarbonate','mmol/L','24'),F('alb','Albumin (optional)','g/dL','4.0',{z:1})],
+ run(v){const ag=v.na-(v.cl+v.hco3),out=[{l:'Anion gap',v:ag,u:'mmol/L',d:1}],steps=[`Cl + HCO₃ = ${v.cl} + ${v.hco3} = ${v.cl+v.hco3}.`,`AG = ${v.na} − ${v.cl+v.hco3} = ${R(ag,1)}.`];
+  if(v.alb>0){const c=ag+2.5*(4-v.alb);out.push({l:'Albumin-corrected AG',v:c,u:'mmol/L',d:1});steps.push(`Corrected = ${R(ag,1)} + 2.5 × (4.0 − ${v.alb}) = ${R(c,1)}.`)}
+  return{out,steps,note:'A typical normal range is about 8–12 mmol/L but depends on the lab. Low albumin hides a raised gap, hence the correction.'}}},
+
+calcium:{g:'phys',t:'Albumin-corrected calcium',s:'Adjusts total calcium for low albumin',
+ why:'Part of blood calcium is bound to albumin. When albumin is low, total calcium looks falsely low.',
+ f:'Corrected Ca = measured Ca + 0.8 × (4.0 − albumin)',
+ fields:[F('ca','Measured total calcium','mg/dL','7.6'),F('alb','Albumin','g/dL','2.5')],
+ run(v){const x=v.ca+0.8*(4-v.alb);
+  return{out:[{l:'Corrected calcium',v:x,u:'mg/dL'}],
+   steps:[`4.0 − albumin = ${R(4-v.alb)}.`,`× 0.8 = ${R(0.8*(4-v.alb))}.`,`Add to measured: ${v.ca} + ${R(0.8*(4-v.alb))} = ${R(x)} mg/dL.`],
+   note:'Usual total calcium is about 8.5–10.5 mg/dL. Ionised calcium is more accurate when albumin is very abnormal.'}}},
+
+gcs:{g:'phys',t:'Glasgow Coma Scale',s:'Level of consciousness, 3 to 15',
+ why:'GCS gives a shared language for how awake and responsive a patient is, so changes can be tracked over time.',
+ f:'GCS = Eye + Verbal + Motor',
+ fields:[S('e','Eye opening',[[4,'4 – Spontaneous'],[3,'3 – To voice'],[2,'2 – To pain'],[1,'1 – None']],4),
+  S('vb','Verbal response',[[5,'5 – Oriented'],[4,'4 – Confused'],[3,'3 – Inappropriate words'],[2,'2 – Incomprehensible sounds'],[1,'1 – None']],5),
+  S('m','Motor response',[[6,'6 – Obeys commands'],[5,'5 – Localises pain'],[4,'4 – Withdraws from pain'],[3,'3 – Abnormal flexion'],[2,'2 – Extension'],[1,'1 – None']],6)],
+ run(v){const x=v.e+v.vb+v.m,s=x>=13?'Mild (13–15)':x>=9?'Moderate (9–12)':'Severe (3–8)';
+  return{out:[{l:'GCS total',v:x,u:'/ 15',d:0},{l:'Severity band',v:s}],
+   steps:[`Eye ${v.e} + Verbal ${v.vb} + Motor ${v.m} = ${x}.`,`Written as E${v.e} V${v.vb} M${v.m}.`],
+   note:'Always report the three parts, not just the total. If the patient is intubated, verbal cannot be scored (record “T”).'}}},
+
+qtc:{g:'phys',t:'Corrected QT (QTc)',s:'Bazett and Fridericia',
+ why:'The QT interval changes with heart rate. QTc corrects it so a long QT (a pro-arrhythmic risk) is not missed or over-called.',
+ f:'RR = 60 ÷ HR · Bazett = QT ÷ √RR · Fridericia = QT ÷ ∛RR',
+ fields:[F('qt','Measured QT','ms','400'),F('hr','Heart rate','bpm','75')],
+ run(v){const rr=60/v.hr,b=v.qt/Math.sqrt(rr),f=v.qt/Math.cbrt(rr);
+  return{out:[{l:'QTc (Fridericia)',v:f,u:'ms',d:0},{l:'QTc (Bazett)',v:b,u:'ms',d:0},{l:'RR interval',v:rr,u:'sec',d:2}],
+   steps:[`RR = 60 ÷ ${v.hr} = ${R(rr,3)} s.`,`Bazett = ${v.qt} ÷ √${R(rr,3)} = ${R(b,0)} ms.`,`Fridericia = ${v.qt} ÷ ∛${R(rr,3)} = ${R(f,0)} ms.`],
+   note:'Commonly prolonged above 450 ms (men) or 460 ms (women); above 500 ms is high risk. Bazett over-corrects at fast heart rates, so Fridericia is often preferred.'}}},
+
+edd:{g:'phys',t:'Due date & gestational age',s:'Naegele’s rule from last menstrual period',
+ why:'Knowing how far along a pregnancy is guides screening, scans and delivery planning.',
+ f:'EDD = first day of last period + 280 days',
+ fields:[F('lmp','First day of last period','date',()=>iso(new Date(Date.now()-84*864e5)),{t:'date'})],
+ run(v){const [y,m,d]=v.lmp.split('-').map(Number),lmp=Date.UTC(y,m-1,d),n=new Date(),today=Date.UTC(n.getFullYear(),n.getMonth(),n.getDate());
+  const days=Math.round((today-lmp)/864e5);if(days<0)throw Error('That date is in the future.');
+  const edd=new Date(lmp+280*864e5).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+  return{out:[{l:'Estimated due date',v:edd},{l:'Gestational age today',v:`${Math.floor(days/7)} wk ${days%7} d`}],
+   steps:[`Add 280 days (40 weeks) to the last period date → ${edd}.`,`Days since last period = ${days} → ${Math.floor(days/7)} weeks and ${days%7} days.`],
+   note:'Assumes a regular 28-day cycle. An early ultrasound can override this date.',
+   warn:days>294?'More than 42 weeks since the last period. Check the date.':''}}},
+
+/* ===== SURGERY & ANAESTHESIA ===== */
+abl:{g:'surg',t:'Allowable blood loss',s:'Gross formula',
+ why:'Before surgery, this estimates how much blood can be lost before haemoglobin falls to the lowest acceptable level, so transfusion can be planned.',
+ f:'EBV = weight × mL/kg · ABL = EBV × (Hb start − Hb lowest) ÷ average Hb',
+ fields:[F('weight','Weight','kg','70'),S('k','Patient type',[[65,'Adult female (65 mL/kg)'],[70,'Adult male (70 mL/kg)'],[75,'Child (75 mL/kg)'],[80,'Infant (80 mL/kg)'],[85,'Term newborn (85 mL/kg)'],[95,'Premature newborn (95 mL/kg)']],70),
+  F('hi','Starting haemoglobin','g/dL','14'),F('hf','Lowest acceptable haemoglobin','g/dL','8')],
+ run(v){if(v.hf>=v.hi)throw Error('Lowest acceptable Hb must be below the starting Hb.');
+  const ebv=v.weight*v.k,av=(v.hi+v.hf)/2,x=ebv*(v.hi-v.hf)/av;
+  return{out:[{l:'Allowable blood loss',v:x,u:'mL',d:0},{l:'Estimated blood volume',v:ebv,u:'mL',d:0},{l:'% of blood volume',v:x/ebv*100,u:'%',d:0}],
+   steps:[`EBV = ${v.weight} × ${v.k} = ${R(ebv,0)} mL.`,`Average Hb = (${v.hi} + ${v.hf}) ÷ 2 = ${R(av)}.`,`ABL = ${R(ebv,0)} × (${v.hi} − ${v.hf}) ÷ ${R(av)} = ${R(x,0)} mL.`],
+   note:'An estimate only. Patient condition, ongoing loss and local transfusion thresholds decide the actual plan.'}}},
+
+burn:{g:'surg',t:'Burn fluid resuscitation (Parkland)',s:'First 24 hours of fluid',
+ why:'Large burns leak fluid from blood vessels. This estimates how much crystalloid to give in the first 24 hours.',
+ f:'Total 24 h = mL factor × weight (kg) × % TBSA burned · half in first 8 h, half in next 16 h',
+ fields:[F('weight','Weight','kg','70'),F('tbsa','Burn area (2nd degree or deeper)','% TBSA','30'),S('f','Fluid factor',[[4,'4 mL/kg/% (classic Parkland)'],[3,'3 mL/kg/%'],[2,'2 mL/kg/% (initial adult guidance)']],4)],
+ run(v){if(v.tbsa>100)throw Error('Burn area cannot be above 100%.');
+  const t=v.f*v.weight*v.tbsa;
+  return{out:[{l:'Total in 24 hours',v:t,u:'mL',d:0},{l:'Rate, first 8 hours',v:t/2/8,u:'mL/hr',d:0},{l:'Rate, next 16 hours',v:t/2/16,u:'mL/hr',d:0}],
+   steps:[`Total = ${v.f} × ${v.weight} × ${v.tbsa} = ${R(t,0)} mL.`,`Half (${R(t/2,0)} mL) over the first 8 h = ${R(t/16,0)} mL/hr.`,`Other half over the next 16 h = ${R(t/32,0)} mL/hr.`],
+   note:'Count the 8 hours from the time of injury, not arrival. Use a balanced crystalloid and adjust to urine output per burn-unit protocol.'}}},
+
+/* ===== RADIOLOGY ===== */
+contrast:{g:'rad',t:'CT contrast volume & rate',s:'Weight-based iodinated contrast',
+ why:'Contrast is dosed by body weight so images are clear without giving more iodine than needed.',
+ f:'Volume = weight × mgI/kg ÷ concentration (mgI/mL) · Rate = volume ÷ injection time',
+ fields:[F('weight','Weight','kg','70'),F('dose','Iodine dose','mgI/kg','520'),F('conc','Contrast strength','mgI/mL','350'),F('time','Injection time','seconds','30'),F('max','Maximum volume (0 = none)','mL','0',{z:1})],
+ run(v){const raw=v.weight*v.dose/v.conc,cap=v.max>0&&raw>v.max,vol=cap?v.max:raw;
+  return{out:[{l:'Contrast volume',v:vol,u:'mL',d:0},{l:'Injection rate',v:vol/v.time,u:'mL/sec'},{l:'Total iodine',v:vol*v.conc/1000,u:'g'}],
+   steps:[`Iodine needed = ${v.weight} × ${v.dose} = ${R(v.weight*v.dose,0)} mgI.`,`Volume = ${R(v.weight*v.dose,0)} ÷ ${v.conc} = ${R(raw)} mL${cap?`, capped to ${v.max} mL`:''}.`,`Rate = ${R(vol)} ÷ ${v.time} s = ${R(vol/v.time)} mL/sec.`],
+   note:'Check kidney function, allergy history and your protocol before injecting.'}}},
+
+edose:{g:'rad',t:'CT effective radiation dose',s:'DLP × conversion factor',
+ why:'Effective dose (mSv) lets different scans be compared with each other and with everyday background radiation.',
+ f:'Effective dose (mSv) = DLP (mGy·cm) × k',
+ fields:[F('dlp','Dose-length product (DLP)','mGy·cm','450'),S('k','Body region (adult k-factor)',[[0.0021,'Head (0.0021)'],[0.0059,'Neck (0.0059)'],[0.014,'Chest (0.014)'],[0.015,'Abdomen / pelvis (0.015)']],0.015)],
+ run(v){const e=v.dlp*v.k,days=e/(2.4/365);
+  return{out:[{l:'Effective dose',v:e,u:'mSv'},{l:'Equal to natural background of',v:days,u:'days',d:0}],
+   steps:[`${v.dlp} × ${v.k} = ${R(e)} mSv.`,`Natural background is about 2.4 mSv per year (≈ ${R(2.4/365,4)} mSv/day) → ${R(days,0)} days.`],
+   note:'Approximate, for adults. Use for comparison and reports, not as an individual risk figure.'}}},
+
+lesion:{g:'rad',t:'Lesion / tumour volume',s:'Ellipsoid estimate from 3 diameters',
+ why:'Measuring three diameters on a scan gives a volume, so growth or shrinkage can be tracked.',
+ f:'Volume = π ÷ 6 × length × width × height',
+ fields:[F('a','Longest diameter','mm','20'),F('b','Second diameter','mm','15'),F('c','Third diameter','mm','12')],
+ run(v){const mm=Math.PI/6*v.a*v.b*v.c;
+  return{out:[{l:'Volume',v:mm/1000,u:'mL (cm³)',d:2},{l:'Volume',v:mm,u:'mm³',d:0}],
+   steps:[`Multiply the three diameters: ${v.a} × ${v.b} × ${v.c} = ${R(v.a*v.b*v.c,0)}.`,`× π ÷ 6 (≈ 0.5236) = ${R(mm,0)} mm³.`,`Divide by 1000 to get mL: ${R(mm/1000)} mL.`],
+   note:'Assumes an ellipsoid shape. Use the same method each time when comparing scans.'}}},
+
+/* ===== HIM & HEALTH STATISTICS ===== */
+beds:{g:'him',t:'Hospital inpatient indicators',s:'Occupancy, length of stay, turnover',
+ why:'Managers use these numbers to judge how busy a hospital is and how well beds are being used.',
+ f:'Occupancy = days ÷ (beds × period) × 100 · ALOS = days ÷ discharges · Turnover = discharges ÷ beds',
+ fields:[F('ipd','Inpatient days in period','days','2400'),F('dis','Discharges incl. deaths','patients','400'),F('beds','Available beds','beds','100'),F('per','Days in period','days','30'),F('deaths','Deaths (optional)','patients','12',{z:1})],
+ run(v){if(v.deaths>v.dis)throw Error('Deaths cannot be more than discharges (deaths are counted as discharges).');
+  const cap=v.beds*v.per,occ=v.ipd/cap*100,alos=v.ipd/v.dis,btr=v.dis/v.beds,toi=(cap-v.ipd)/v.dis;
+  const out=[{l:'Bed occupancy rate',v:occ,u:'%',d:1},{l:'Average length of stay',v:alos,u:'days',d:1},{l:'Bed turnover rate',v:btr,u:'per bed',d:1},{l:'Turnover interval',v:toi,u:'days',d:1}];
+  if(v.deaths>0)out.push({l:'Hospital death rate',v:v.deaths/v.dis*100,u:'%',d:1});
+  return{out,steps:[`Bed-days available = ${v.beds} × ${v.per} = ${R(cap,0)}.`,`Occupancy = ${v.ipd} ÷ ${R(cap,0)} × 100 = ${R(occ,1)}%.`,`ALOS = ${v.ipd} ÷ ${v.dis} = ${R(alos,1)} days.`,`Turnover rate = ${v.dis} ÷ ${v.beds} = ${R(btr,1)}.`,`Turnover interval = (${R(cap,0)} − ${v.ipd}) ÷ ${v.dis} = ${R(toi,1)} days (average time a bed sits empty).`],
+   note:'Turnover interval is the average time a bed stays empty between patients.',
+   warn:occ>100?'Occupancy is above 100%. Check the inpatient days and bed count.':''}}},
+
+rate:{g:'him',t:'Rate per population',s:'Incidence, prevalence, mortality, case fatality',
+ why:'Raw counts mislead. Dividing by the population at risk lets you compare places and time periods fairly.',
+ f:'Rate = events ÷ population at risk × multiplier',
+ fields:[F('ev','Number of events (cases/deaths)','count','18',{z:1}),F('pop','Population at risk','count','4500'),S('mult','Express rate',[[100,'per 100 (percent)'],[1000,'per 1,000'],[10000,'per 10,000'],[100000,'per 100,000']],1000)],
+ run(v){if(v.ev>v.pop)throw Error('Events cannot exceed the population at risk.');
+  const r=v.ev/v.pop*v.mult;
+  return{out:[{l:`Rate per ${fmt(v.mult,0)}`,v:r,u:'',d:2},{l:'As a percentage',v:v.ev/v.pop*100,u:'%',d:2}],
+   steps:[`Divide events by population: ${v.ev} ÷ ${v.pop} = ${R(v.ev/v.pop,5)}.`,`Multiply by ${fmt(v.mult,0)} = ${R(r)}.`],
+   note:'Incidence = new cases ÷ population at risk in a period. Prevalence = all existing cases ÷ population. Case fatality = deaths ÷ cases.'}}},
+
+diag:{g:'him',t:'Diagnostic test accuracy',s:'Sensitivity, specificity, PPV, NPV',
+ why:'These show how well a test finds disease (sensitivity), clears healthy people (specificity), and how much to trust a positive or negative result.',
+ f:'Sens = TP÷(TP+FN) · Spec = TN÷(TN+FP) · PPV = TP÷(TP+FP) · NPV = TN÷(TN+FN)',
+ fields:[F('tp','True positives (TP)','count','90',{z:1}),F('fp','False positives (FP)','count','20',{z:1}),F('fn','False negatives (FN)','count','10',{z:1}),F('tn','True negatives (TN)','count','180',{z:1})],
+ run(v){const {tp,fp,fn,tn}=v,P=(a,b)=>b>0?a/b*100:NaN,n=tp+fp+fn+tn;if(n===0)throw Error('Enter at least one count.');
+  const se=P(tp,tp+fn),sp=P(tn,tn+fp),lrp=(se/100)/(1-sp/100),lrn=(1-se/100)/(sp/100);
+  return{out:[{l:'Sensitivity',v:se,u:'%',d:1},{l:'Specificity',v:sp,u:'%',d:1},{l:'Positive predictive value',v:P(tp,tp+fp),u:'%',d:1},{l:'Negative predictive value',v:P(tn,tn+fn),u:'%',d:1},{l:'Accuracy',v:P(tp+tn,n),u:'%',d:1},{l:'Likelihood ratio +',v:lrp},{l:'Likelihood ratio −',v:lrn}],
+   steps:[`Sensitivity = ${tp} ÷ (${tp} + ${fn}) = ${R(se,1)}%.`,`Specificity = ${tn} ÷ (${tn} + ${fp}) = ${R(sp,1)}%.`,`PPV = ${tp} ÷ (${tp} + ${fp}); NPV = ${tn} ÷ (${tn} + ${fn}).`,`Accuracy = (${tp} + ${tn}) ÷ ${n}.`],
+   note:'PPV and NPV change with how common the disease is. Sensitivity and specificity do not. A dash (—) means the maths is undefined for those counts.'}}},
+
+risk:{g:'him',t:'Relative risk & NNT',s:'Compare two groups',
+ why:'Shows how much a treatment changes the chance of an outcome, and how many people must be treated for one to benefit.',
+ f:'RR = EER ÷ CER · ARR = CER − EER · NNT = 1 ÷ ARR',
+ fields:[F('a','Events in treated group','count','10',{z:1}),F('n1','Total treated group','count','100'),F('c','Events in control group','count','20',{z:1}),F('n2','Total control group','count','100')],
+ run(v){if(v.a>v.n1||v.c>v.n2)throw Error('Events cannot exceed group size.');
+  const eer=v.a/v.n1,cer=v.c/v.n2,rr=eer/cer,arr=(cer-eer)*100,odds=(v.a/(v.n1-v.a))/(v.c/(v.n2-v.c));
+  return{out:[{l:'Relative risk',v:rr},{l:'Relative risk reduction',v:(1-rr)*100,u:'%',d:1},{l:'Absolute risk reduction',v:arr,u:'% points',d:1},{l:arr>=0?'NNT':'NNH',v:arr!==0?100/Math.abs(arr):NaN,d:1},{l:'Odds ratio',v:odds}],
+   steps:[`Treated risk (EER) = ${v.a} ÷ ${v.n1} = ${R(eer,3)}.`,`Control risk (CER) = ${v.c} ÷ ${v.n2} = ${R(cer,3)}.`,`RR = ${R(eer,3)} ÷ ${R(cer,3)} = ${R(rr)}.`,`ARR = ${R(cer,3)} − ${R(eer,3)} = ${R(arr/100,3)} → NNT = 1 ÷ ${R(Math.abs(arr)/100,3)}.`],
+   note:'RR below 1 means the outcome is less likely in the treated group. NNT is how many people must be treated for one extra person to benefit (NNH = harm).'}}}
+};
+
+/* ---------- UI STATE ---------- */
+let group='pharm',active='infusion';
+const HKEY='mc-history-v2';
+
+function fieldHTML(f){
+  const cls='h-10 w-full rounded-lg border border-slate-200 px-3 text-base sm:text-xs';
+  let c;
+  if(f.t==='select')c=`<select name="${f.k}" class="${cls}">${f.o.map(o=>`<option value="${o[0]}" ${o[0]==f.e?'selected':''}>${o[1]}</option>`).join('')}</select>`;
+  else if(f.t==='date')c=`<input required name="${f.k}" type="date" class="${cls}">`;
+  else c=`<input ${f.z?'':'required'} name="${f.k}" type="number" inputmode="decimal" min="${f.z?0:'0.0001'}" step="any" placeholder="e.g. ${f.e}" class="${cls}">`;
+  return `<label class="grid gap-2 text-xs font-bold">${f.l} ${f.u?`<span class="text-[10px] font-normal text-slate-400">${f.u}</span>`:''}${c}</label>`;
+}
+
+function draw(){
+  $('#chips').innerHTML=Object.entries(GROUPS).map(([k,n])=>`<button data-g="${k}" class="shrink-0 rounded-full border px-4 py-2 text-xs font-bold ${k===group?'border-teal bg-teal text-white':'border-slate-200 bg-white text-slate-500'}">${n}</button>`).join('');
+  $('#tools').innerHTML=Object.keys(T).filter(k=>T[k].g===group).map(k=>`<button data-k="${k}" class="rounded-xl border p-3 text-left text-xs font-bold ${k===active?'border-[#aadbd2] bg-[#f3fbf8]':'border-slate-200 bg-white'}">${T[k].t}</button>`).join('');
+  const t=T[active];
+  $('#title').textContent=t.t;$('#sub').textContent=t.s;$('#why').textContent=t.why;
+  $('#fields').innerHTML=t.fields.map(fieldHTML).join('');
+  $('#result-title').textContent='Ready when you are';
+  $('#result').innerHTML='Enter values (or tap “Fill example”) to see an explainable result.';
+  document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{group=b.dataset.g;active=Object.keys(T).find(k=>T[k].g===group);draw()});
+  document.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{active=b.dataset.k;draw()});
+  showHistory();
+}
+
+function show(t,r){
+  const [m,...rest]=r.out;
+  $('#result-title').textContent=m.l;
+  $('#result').innerHTML=
+    `<b class="font-display text-3xl text-teal">${fmt(m.v,m.d)} <small class="font-sans text-xs text-slate-500">${m.u||''}</small></b>`+
+    (rest.length?`<div class="mt-4 grid grid-cols-2 gap-2">${rest.map(o=>`<div class="rounded-xl bg-slate-50 p-3"><p class="text-[10px] font-bold text-slate-400">${o.l}</p><p class="mt-1 text-sm font-extrabold text-ink">${fmt(o.v,o.d)} <small class="text-[10px] font-normal text-slate-500">${o.u||''}</small></p></div>`).join('')}</div>`:'')+
+    (r.note?`<p class="mt-4 text-xs text-slate-600">${r.note}</p>`:'')+
+    (r.warn?`<p class="mt-3 rounded-lg bg-amber-50 p-3 text-xs font-semibold text-amber-800">⚠ ${r.warn}</p>`:'')+
+    `<hr class="my-5"><p class="text-[10px] font-extrabold tracking-widest text-teal">HOW WE GOT THERE</p>`+
+    `<ol class="mt-2 list-decimal space-y-1 pl-4 text-xs text-slate-600">${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol>`+
+    `<hr class="my-5"><p class="text-[10px] font-extrabold tracking-widest text-slate-400">FORMULA</p><code class="text-xs text-slate-500">${t.f}</code>`;
+}
+
+function showHistory(){
+  const h=JSON.parse(localStorage.getItem(HKEY)||'[]');
+  $('#history').innerHTML=h.length?h.slice(0,8).map(x=>`<div class="flex justify-between gap-3 border-b py-2 text-xs"><span>${x.label}</span><b class="text-teal">${x.text}</b></div>`).join(''):'<p class="text-xs text-slate-400">No calculations yet.</p>';
+}
+
+/* ---------- EVENTS ---------- */
+$('#example').onclick=()=>{
+  T[active].fields.forEach(f=>{const el=$('#calc').elements[f.k];if(el)el.value=typeof f.e==='function'?f.e():f.e});
+};
+
+$('#calc').onsubmit=e=>{
+  e.preventDefault();
+  try{
+    const t=T[active],v={};
+    t.fields.forEach(f=>{
+      const raw=e.target.elements[f.k].value;
+      if(f.t==='date'){if(!raw)throw Error(`${f.l}: pick a date.`);v[f.k]=raw;return}
+      const x=Number(raw);
+      if(f.t==='select'){v[f.k]=isNaN(x)?raw:x;return}
+      if(!Number.isFinite(x)||(f.z?x<0:x<=0))throw Error(`${f.l} must be ${f.z?'0 or more':'greater than 0'}.`);
+      v[f.k]=x;
+    });
+    const r=t.run(v),m=r.out[0],h=JSON.parse(localStorage.getItem(HKEY)||'[]');
+    h.unshift({label:t.t,text:`${fmt(m.v,m.d)} ${m.u||''}`,createdAt:new Date().toISOString()});
+    localStorage.setItem(HKEY,JSON.stringify(h.slice(0,20)));
+    show(t,r);showHistory();toast('Result saved locally.');
+    $('#result-title').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(x){toast(x.message,true)}
+};
+
+$('#clear').onclick=()=>{localStorage.removeItem(HKEY);showHistory();toast('History cleared')};
+
+draw();
+
+/* ---------- LIVE CLOCK ---------- */
+let is24=localStorage.getItem('mc-clock24')==='1',lastSec=-1;
+const pad=n=>String(n).padStart(2,'0');
+function tick(){
+  const d=new Date(),s=d.getSeconds();
+  $('#secbar').style.width=((s*1000+d.getMilliseconds())/60000*100)+'%';
+  if(s===lastSec)return;
+  lastSec=s;
+  let h=d.getHours();
+  const ap=h>=12?'PM':'AM';
+  if(!is24)h=h%12||12;
+  $('#hh').textContent=pad(h);
+  $('#mm').textContent=pad(d.getMinutes());
+  $('#ss').textContent=pad(s);
+  $('#ampm').textContent=is24?'24-HOUR':ap;
+  $('#fmt').textContent=is24?'Use 12h':'Use 24h';
+  $('#dateline').textContent=d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  let tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+  $('#tz').textContent=tz?'Time zone: '+tz.replace(/_/g,' '):'';
+}
+$('#fmt').onclick=()=>{is24=!is24;localStorage.setItem('mc-clock24',is24?'1':'0');lastSec=-1;tick()};
+tick();
+setInterval(tick,250);
+
+/* ---------- HEALTH BACKGROUND (ECG + floating symbols) ---------- */
+(function(){
+  const cv=$('#bg'),ctx=cv.getContext('2d');
+  if(!ctx)return;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const COLORS=['#1b9a91','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981'];
+  let W=0,H=0,parts=[],scroll=0,last=performance.now();
+
+  function mk(init){
+    return{x:Math.random()*W,y:init?Math.random()*H:H+30,s:10+Math.random()*16,vy:.15+Math.random()*.35,vx:(Math.random()-.5)*.2,
+      rot:Math.random()*6.28,vr:(Math.random()-.5)*.01,t:Math.floor(Math.random()*3),
+      c:COLORS[Math.floor(Math.random()*COLORS.length)],a:.14+Math.random()*.16};
+  }
+  function size(){
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    W=innerWidth;H=innerHeight;
+    cv.width=W*dpr;cv.height=H*dpr;
+    cv.style.width=W+'px';cv.style.height=H+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    parts=Array.from({length:W<640?12:24},()=>mk(true));
+    if(reduce)frame(performance.now());
+  }
+  // one heartbeat (P wave, QRS spike, T wave); t runs 0..1
+  function beat(t){
+    if(t>.10&&t<.20)return .12*Math.sin(Math.PI*(t-.10)/.10);
+    if(t>=.28&&t<.31)return -.15*(t-.28)/.03;
+    if(t>=.31&&t<.35)return -.15+1.15*(t-.31)/.04;
+    if(t>=.35&&t<.40)return 1-1.3*(t-.35)/.05;
+    if(t>=.40&&t<.43)return -.3+.3*(t-.40)/.03;
+    if(t>.52&&t<.70)return .25*Math.sin(Math.PI*(t-.52)/.18);
+    return 0;
+  }
+  function ecg(y,amp,period,speed,alpha){
+    const g=ctx.createLinearGradient(0,0,W,0);
+    g.addColorStop(0,'rgba(27,154,145,0)');
+    g.addColorStop(.25,`rgba(27,154,145,${alpha})`);
+    g.addColorStop(.6,`rgba(139,92,246,${alpha})`);
+    g.addColorStop(.85,`rgba(236,72,153,${alpha})`);
+    g.addColorStop(1,'rgba(236,72,153,0)');
+    ctx.strokeStyle=g;ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.beginPath();
+    for(let x=0;x<=W;x+=3){
+      const ph=((((x+scroll*speed)%period)+period)%period)/period;
+      const yy=y-beat(ph)*amp;
+      x?ctx.lineTo(x,yy):ctx.moveTo(x,yy);
+    }
+    ctx.stroke();
+  }
+  function cross(s){const w=s/3;ctx.beginPath();ctx.rect(-s/2,-w/2,s,w);ctx.rect(-w/2,-s/2,w,s);ctx.fill()}
+  function heart(s){const r=s/2;ctx.beginPath();ctx.moveTo(0,r*.9);ctx.bezierCurveTo(-r*1.6,-r*.2,-r*.7,-r*1.3,0,-r*.5);ctx.bezierCurveTo(r*.7,-r*1.3,r*1.6,-r*.2,0,r*.9);ctx.fill()}
+  function ring(s){ctx.beginPath();ctx.arc(0,0,s/2,0,6.283);ctx.lineWidth=2;ctx.stroke()}
+
+  function frame(now){
+    const dt=Math.min(50,now-last);last=now;
+    scroll+=dt*.06;
+    ctx.clearRect(0,0,W,H);
+    for(const p of parts){
+      if(!reduce){p.y-=p.vy*dt/16;p.x+=p.vx*dt/16;p.rot+=p.vr*dt/16;if(p.y<-30)Object.assign(p,mk(false))}
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);
+      ctx.globalAlpha=p.a;ctx.fillStyle=p.c;ctx.strokeStyle=p.c;
+      p.t===0?cross(p.s):p.t===1?heart(p.s):ring(p.s);
+      ctx.restore();
+    }
+    ctx.globalAlpha=1;
+    ecg(H*.78,Math.min(46,H*.09),320,1,.34);
+    ecg(H*.22,28,420,.6,.2);
+    if(!reduce)requestAnimationFrame(frame);
+  }
+
+  size();
+  if(!reduce)requestAnimationFrame(frame);
+  // mobile browsers fire resize when the address bar hides; only rebuild on real changes
+  let rt;
+  addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth!==W||Math.abs(innerHeight-H)>150)size()},200)});
+})();
+
+/* ---------- SIDEBAR LOGO FROM ADMIN STUDIO ---------- */
+(function(){
+  const FB={apiKey:'',projectId:''}; // same values as in admin.html
+  const b=$('#side-logo');
+  if(!b)return;
+  const put=u=>{if(!u)return;b.textContent='';const i=new Image();i.src=u;i.alt='Logo';i.className='h-full w-full object-cover';b.append(i)};
+  try{put(JSON.parse(localStorage.getItem('mc-logo')||'""'))}catch(e){}
+  if(!FB.apiKey||!FB.projectId)return;
+  fetch(`https://firestore.googleapis.com/v1/projects/${FB.projectId}/databases/(default)/documents/brand/settings?key=${FB.apiKey}`)
+    .then(r=>r.json())
+    .then(d=>{const u=d.fields&&d.fields.logo&&d.fields.logo.stringValue;if(u){try{localStorage.setItem('mc-logo',JSON.stringify(u))}catch(e){}put(u)}})
+    .catch(()=>{});
+})();
+</script>
+</body>
+</html>

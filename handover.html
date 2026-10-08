@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Shift handover · Miracardiac</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6f73">
+<link rel="manifest" href="public/manifest.webmanifest">
+<link rel="icon" href="public/icon-192.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Manrope','sans-serif']},colors:{teal:'#0b6f73',ink:'#172b3b'}}}};</script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{background:radial-gradient(circle at 80% 0,#eaf8f5,transparent 26rem),#f5f8fb}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#shell{position:relative;z-index:1}
+.glass{background:#ffffffdd;backdrop-filter:blur(12px)}
+.toast{animation:in .25s}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body class="min-w-[320px] text-ink font-sans">
+<canvas id="bg" aria-hidden="true"></canvas>
+<div id="shell" class="md:grid md:grid-cols-[250px_1fr]">
+  <aside class="border-b border-slate-200 bg-white p-4 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:p-6">
+    <a href="index.html" class="flex items-center gap-3 pb-6 no-underline">
+      <b class="grid h-10 w-10 place-items-center rounded-[13px] bg-gradient-to-br from-[#1b9a91] to-teal font-display text-xl text-white shadow-lg">M</b>
+      <span class="hidden md:block"><strong class="block font-display">Miracardiac</strong><small class="text-[8px] font-extrabold tracking-widest text-slate-400">CLINICAL INTELLIGENCE</small></span>
+    </a>
+    <nav class="hidden md:block">
+      <p class="text-[9px] font-extrabold tracking-widest text-slate-400">WORKSPACE</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="dashboard.html">⌘ Dashboard</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="calculator.html">＋ Calculator</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="patient-records.html">📋 Patient records</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="medication.html">💊 Drug follow-up</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold bg-[#f1faf7] text-teal" href="handover.html">🔄 Shift handover</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="customer-care.html">♡ Customer care</a>
+      <p class="mt-5 text-[9px] font-extrabold tracking-widest text-slate-400">MANAGEMENT</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="admin.html">⚙ Admin studio</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="settings.html">◈ Settings</a>
+    </nav>
+    <div class="mt-auto hidden md:block">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-[10px] text-[#958b7c]">
+        <b class="text-[#976f39]">✦ Safety first</b>
+        <p class="mt-1">Handover notes stay on this device unless you export or sync.</p>
+      </div>
+    </div>
+  </aside>
+  <main>
+    <header class="glass sticky top-0 z-10 flex min-h-[76px] items-center justify-between border-b border-slate-200 px-5 md:px-[4vw]">
+      <div>
+        <small class="font-bold tracking-widest text-slate-400">MIRACARDIAC / <b class="text-teal">WORKSPACE</b></small>
+        <h1 class="font-display font-extrabold">Shift handover</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="user-pill" class="hidden rounded-full border border-[#d3eee7] bg-[#f1faf7] px-3 py-2 text-[10px] font-bold text-[#43836f] sm:block">Local session</span>
+        <button id="logout" class="text-[10px] font-bold text-slate-500">Log out</button>
+        <b class="grid h-8 w-8 place-items-center rounded-full bg-[#dceef0] text-[10px] text-[#376a77]">MC</b>
+      </div>
+    </header>
+    <div class="mx-auto max-w-4xl px-5 py-8 md:px-[4vw]">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-xs text-[#8a6d3b] mb-6">
+        Structured SBAR-style handover. Prefer codes over full identifiers.
+      </div>
+      <form id="ho-form" class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm grid gap-4">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="grid gap-1 text-xs font-bold">From shift / team
+            <input name="from" required placeholder="e.g. Day shift – Ward 4" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+          </label>
+          <label class="grid gap-1 text-xs font-bold">To shift / team
+            <input name="to" required placeholder="e.g. Night shift – Ward 4" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+          </label>
+        </div>
+        <label class="grid gap-1 text-xs font-bold">Situation (who / what)
+          <textarea name="situation" rows="2" required placeholder="Bed codes and primary problems" class="rounded-lg border border-slate-200 p-3 text-sm"></textarea>
+        </label>
+        <label class="grid gap-1 text-xs font-bold">Background
+          <textarea name="background" rows="2" placeholder="Relevant history, allergies, isolation…" class="rounded-lg border border-slate-200 p-3 text-sm"></textarea>
+        </label>
+        <label class="grid gap-1 text-xs font-bold">Assessment
+          <textarea name="assessment" rows="2" placeholder="Current status, pending results, risks" class="rounded-lg border border-slate-200 p-3 text-sm"></textarea>
+        </label>
+        <label class="grid gap-1 text-xs font-bold">Recommendation / outstanding tasks
+          <textarea name="recommend" rows="3" required placeholder="What the incoming team must do first" class="rounded-lg border border-slate-200 p-3 text-sm"></textarea>
+        </label>
+        <button class="rounded-xl bg-teal py-3 text-xs font-bold text-white w-fit px-6">Save handover →</button>
+      </form>
+      <section class="mt-6 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+        <div class="flex justify-between items-center">
+          <h3 class="font-display font-extrabold">Saved handovers</h3>
+          <button id="wipe-ho" class="text-xs font-bold text-red-700">Clear all</button>
+        </div>
+        <div id="ho-list" class="mt-4 space-y-3"></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const toast=(x,b=false)=>{let n=document.createElement('div');n.className='toast fixed bottom-5 right-5 z-50 rounded-xl px-4 py-3 text-xs text-white shadow-2xl '+(b?'bg-red-700':'bg-[#183b4a]');n.textContent=x;document.body.append(n);setTimeout(()=>n.remove(),3500)};
+if($('#logout'))$('#logout').onclick=()=>{localStorage.removeItem('mc-user');location.href='login.html'};
+if($('#user-pill'))$('#user-pill').textContent=localStorage.getItem('mc-user')||'Guest mode';
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('public/sw.js').catch(()=>{}));
+const KEY='mc-handover-v1';
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
+function save(a){localStorage.setItem(KEY,JSON.stringify(a.slice(-50)))}
+function render(){
+  const list=load().slice().reverse();
+  $('#ho-list').innerHTML=list.length?list.map((x,i)=>`<div class="rounded-xl border border-slate-100 bg-slate-50 p-4 text-xs">
+    <div class="flex justify-between gap-2"><b>${x.from} → ${x.to}</b><span class="text-slate-400">${new Date(x.at).toLocaleString()}</span></div>
+    <p class="mt-2"><b>S:</b> ${x.situation}</p>
+    ${x.background?`<p class="mt-1"><b>B:</b> ${x.background}</p>`:''}
+    ${x.assessment?`<p class="mt-1"><b>A:</b> ${x.assessment}</p>`:''}
+    <p class="mt-1"><b>R:</b> ${x.recommend}</p>
+    <button data-i="${load().indexOf(x)}" class="del mt-2 text-[10px] font-bold text-red-600">Remove</button>
+  </div>`).join(''):'<p class="text-slate-400 text-xs">No handovers saved yet.</p>';
+  document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{const a=load();a.splice(+b.dataset.i,1);save(a);render();toast('Removed')});
+}
+$('#ho-form').onsubmit=e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const a=load();
+  a.push({at:new Date().toISOString(),from:fd.get('from'),to:fd.get('to'),situation:fd.get('situation'),background:fd.get('background')||'',assessment:fd.get('assessment')||'',recommend:fd.get('recommend')});
+  save(a);e.target.reset();render();toast('Handover saved');
+};
+$('#wipe-ho').onclick=()=>{if(confirm('Clear all handovers?')){save([]);render();toast('Cleared')}};
+render();
+(function(){const cv=$('#bg'),ctx=cv.getContext('2d');if(!ctx)return;const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;const COLORS=['#1b9a91','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981'];let W=0,H=0,parts=[],scroll=0,last=performance.now();function mk(init){return{x:Math.random()*W,y:init?Math.random()*H:H+30,s:10+Math.random()*16,vy:.15+Math.random()*.35,vx:(Math.random()-.5)*.2,rot:Math.random()*6.28,vr:(Math.random()-.5)*.01,t:Math.floor(Math.random()*3),c:COLORS[Math.floor(Math.random()*COLORS.length)],a:.12+Math.random()*.14}}function size(){const dpr=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);parts=Array.from({length:W<640?10:18},()=>mk(true));if(reduce)frame(performance.now())}function beat(t){if(t>.10&&t<.20)return .12*Math.sin(Math.PI*(t-.10)/.10);if(t>=.28&&t<.31)return -.15*(t-.28)/.03;if(t>=.31&&t<.35)return -.15+1.15*(t-.31)/.04;if(t>=.35&&t<.40)return 1-1.3*(t-.35)/.05;if(t>=.40&&t<.43)return -.3+.3*(t-.40)/.03;if(t>.52&&t<.70)return .25*Math.sin(Math.PI*(t-.52)/.18);return 0}function ecg(y,amp,period,speed,alpha){const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,'rgba(27,154,145,0)');g.addColorStop(.25,`rgba(27,154,145,${alpha})`);g.addColorStop(.6,`rgba(139,92,246,${alpha})`);g.addColorStop(.85,`rgba(236,72,153,${alpha})`);g.addColorStop(1,'rgba(236,72,153,0)');ctx.strokeStyle=g;ctx.lineWidth=2;ctx.lineJoin='round';ctx.beginPath();for(let x=0;x<=W;x+=3){const ph=((((x+scroll*speed)%period)+period)%period)/period;const yy=y-beat(ph)*amp;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy)}ctx.stroke()}function cross(s){const w=s/3;ctx.beginPath();ctx.rect(-s/2,-w/2,s,w);ctx.rect(-w/2,-s/2,w,s);ctx.fill()}function heart(s){const r=s/2;ctx.beginPath();ctx.moveTo(0,r*.9);ctx.bezierCurveTo(-r*1.6,-r*.2,-r*.7,-r*1.3,0,-r*.5);ctx.bezierCurveTo(r*.7,-r*1.3,r*1.6,-r*.2,0,r*.9);ctx.fill()}function ring(s){ctx.beginPath();ctx.arc(0,0,s/2,0,6.283);ctx.lineWidth=2;ctx.stroke()}function frame(now){const dt=Math.min(50,now-last);last=now;scroll+=dt*.06;ctx.clearRect(0,0,W,H);for(const p of parts){if(!reduce){p.y-=p.vy*dt/16;p.x+=p.vx*dt/16;p.rot+=p.vr*dt/16;if(p.y<-30)Object.assign(p,mk(false))}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=p.a;ctx.fillStyle=p.c;ctx.strokeStyle=p.c;p.t===0?cross(p.s):p.t===1?heart(p.s):ring(p.s);ctx.restore()}ctx.globalAlpha=1;ecg(H*.78,Math.min(40,H*.08),320,1,.28);ecg(H*.22,24,420,.6,.16);if(!reduce)requestAnimationFrame(frame)}size();if(!reduce)requestAnimationFrame(frame);let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth!==W||Math.abs(innerHeight-H)>150)size()},200)})})();
+</script>
+</body>
+</html>

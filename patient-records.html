@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Patient records · Miracardiac</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6f73">
+<link rel="manifest" href="public/manifest.webmanifest">
+<link rel="icon" href="public/icon-192.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Manrope','sans-serif']},colors:{teal:'#0b6f73',ink:'#172b3b'}}}};</script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{background:radial-gradient(circle at 80% 0,#eaf8f5,transparent 26rem),#f5f8fb}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#shell{position:relative;z-index:1}
+.glass{background:#ffffffdd;backdrop-filter:blur(12px)}
+.toast{animation:in .25s}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body class="min-w-[320px] text-ink font-sans">
+<canvas id="bg" aria-hidden="true"></canvas>
+<div id="shell" class="md:grid md:grid-cols-[250px_1fr]">
+
+  <aside class="border-b border-slate-200 bg-white p-4 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:p-6">
+    <a href="index.html" class="flex items-center gap-3 pb-6 no-underline">
+      <b class="grid h-10 w-10 place-items-center rounded-[13px] bg-gradient-to-br from-[#1b9a91] to-teal font-display text-xl text-white shadow-lg">M</b>
+      <span class="hidden md:block"><strong class="block font-display">Miracardiac</strong><small class="text-[8px] font-extrabold tracking-widest text-slate-400">CLINICAL INTELLIGENCE</small></span>
+    </a>
+    <nav class="hidden md:block">
+      <p class="text-[9px] font-extrabold tracking-widest text-slate-400">WORKSPACE</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="dashboard.html">⌘ Dashboard</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="calculator.html">＋ Calculator</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold bg-[#f1faf7] text-teal" href="patient-records.html">📋 Patient records</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="medication.html">💊 Drug follow-up</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="handover.html">🔄 Shift handover</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="customer-care.html">♡ Customer care</a>
+      <p class="mt-5 text-[9px] font-extrabold tracking-widest text-slate-400">MANAGEMENT</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="admin.html">⚙ Admin studio</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="settings.html">◈ Settings</a>
+    </nav>
+    <div class="mt-auto hidden md:block">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-[10px] text-[#958b7c]">
+        <b class="text-[#976f39]">✦ Safety first</b>
+        <p class="mt-1">Decision support only. Use codes, not full patient identifiers when possible.</p>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="glass sticky top-0 z-10 flex min-h-[76px] items-center justify-between border-b border-slate-200 px-5 md:px-[4vw]">
+      <div>
+        <small class="font-bold tracking-widest text-slate-400">MIRACARDIAC / <b class="text-teal">WORKSPACE</b></small>
+        <h1 class="font-display font-extrabold">Patient records & reminders</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="user-pill" class="hidden rounded-full border border-[#d3eee7] bg-[#f1faf7] px-3 py-2 text-[10px] font-bold text-[#43836f] sm:block">Local session</span>
+        <button id="logout" class="text-[10px] font-bold text-slate-500">Log out</button>
+        <b class="grid h-8 w-8 place-items-center rounded-full bg-[#dceef0] text-[10px] text-[#376a77]">MC</b>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-6xl px-5 py-8 md:px-[4vw]">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-xs text-[#8a6d3b] mb-6">
+        <b>Privacy:</b> Prefer bed numbers or temporary codes instead of full names or hospital IDs. Data is stored in this browser unless you connect Firebase.
+      </div>
+
+      <p class="mb-2 text-[10px] font-extrabold tracking-widest text-slate-400">DEPARTMENT</p>
+      <div id="dept-chips" class="flex gap-2 overflow-x-auto pb-2"></div>
+
+      <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
+        <!-- Form -->
+        <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+          <p class="text-[10px] font-extrabold tracking-widest text-teal">NEW ENTRY</p>
+          <h2 id="dept-title" class="mt-2 font-display text-xl font-extrabold">Nursing vitals & care notes</h2>
+          <p id="dept-help" class="mt-1 text-xs text-slate-400">Record temperature, BP, pulse, SpO₂, reminders and care notes.</p>
+
+          <form id="entry-form" class="mt-5 grid gap-4 sm:grid-cols-2">
+            <label class="grid gap-1 text-xs font-bold sm:col-span-2">Patient code / bed
+              <input name="code" required placeholder="e.g. Bed 12-A or TMP-0042" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+            </label>
+            <div id="dynamic-fields" class="sm:col-span-2 grid gap-4 sm:grid-cols-2"></div>
+            <label class="grid gap-1 text-xs font-bold sm:col-span-2">Care note / observation
+              <textarea name="note" rows="3" placeholder="Free-text clinical note" class="rounded-lg border border-slate-200 p-3 text-sm"></textarea>
+            </label>
+            <label class="grid gap-1 text-xs font-bold">Next review / reminder
+              <input name="reminder" type="datetime-local" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+            </label>
+            <label class="grid gap-1 text-xs font-bold">Priority
+              <select name="priority" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+                <option value="routine">Routine</option>
+                <option value="watch">Watch closely</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </label>
+            <div class="sm:col-span-2 flex gap-2">
+              <button class="rounded-xl bg-teal py-3 px-6 text-xs font-bold text-white">Save entry →</button>
+              <button type="button" id="clear-form" class="rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-500">Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Upcoming reminders -->
+        <aside class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+          <p class="text-[10px] font-extrabold tracking-widest text-teal">UPCOMING REMINDERS</p>
+          <div id="reminders" class="mt-4 space-y-2 text-xs"></div>
+        </aside>
+      </div>
+
+      <!-- History for selected dept -->
+      <section class="mt-6 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h3 class="font-display font-extrabold">Recent entries</h3>
+          <div class="flex gap-2">
+            <input id="filter-code" placeholder="Filter by code…" class="h-9 rounded-lg border border-slate-200 px-3 text-xs">
+            <button id="export-csv" class="rounded-lg border border-[#cfe8e3] bg-[#f1fbf8] px-3 text-xs font-bold text-teal">Export CSV</button>
+            <button id="wipe-dept" class="rounded-lg border border-red-200 px-3 text-xs font-bold text-red-700">Clear dept data</button>
+          </div>
+        </div>
+        <div id="entries" class="mt-4 overflow-x-auto"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const toast=(x,b=false)=>{let n=document.createElement('div');n.className='toast fixed bottom-5 right-5 z-50 rounded-xl px-4 py-3 text-xs text-white shadow-2xl '+(b?'bg-red-700':'bg-[#183b4a]');n.textContent=x;document.body.append(n);setTimeout(()=>n.remove(),3500)};
+if($('#logout'))$('#logout').onclick=()=>{localStorage.removeItem('mc-user');location.href='login.html'};
+if($('#user-pill'))$('#user-pill').textContent=localStorage.getItem('mc-user')||'Guest mode';
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('public/sw.js').catch(()=>{}));
+
+const KEY='mc-patient-records-v1';
+const DEPTS={
+  nursing:{label:'Nursing',title:'Nursing vitals & care notes',help:'Temperature, BP, pulse, SpO₂, pain score, reminders and bedside observations.',
+    fields:[
+      {k:'temp',l:'Temperature',u:'°C',ph:'36.8'},
+      {k:'sys',l:'Systolic BP',u:'mmHg',ph:'120'},
+      {k:'dia',l:'Diastolic BP',u:'mmHg',ph:'80'},
+      {k:'hr',l:'Heart rate',u:'bpm',ph:'78'},
+      {k:'rr',l:'Resp. rate',u:'/min',ph:'16'},
+      {k:'spo2',l:'SpO₂',u:'%',ph:'98'},
+      {k:'pain',l:'Pain score',u:'0–10',ph:'2'}
+    ]},
+  physicians:{label:'Physicians',title:'Physician progress notes',help:'SOAP-style notes, working diagnosis and plan. Prefer codes over identifiers.',
+    fields:[
+      {k:'diagnosis',l:'Working diagnosis / problem',ph:'e.g. CAP, day 3'},
+      {k:'plan',l:'Plan / orders',ph:'Continue IV Abx, repeat CXR…'},
+      {k:'status',l:'Clinical status',ph:'Stable / improving / unstable'}
+    ]},
+  pharmacy:{label:'Pharmacy',title:'Pharmacy interventions',help:'Clinical pharmacy notes, interactions flagged, dose adjustments.',
+    fields:[
+      {k:'drug',l:'Drug / issue',ph:'e.g. Vancomycin trough'},
+      {k:'action',l:'Action taken',ph:'Dose held pending level'},
+      {k:'follow',l:'Follow-up needed',ph:'Recheck level in 24 h'}
+    ]},
+  surgery:{label:'Surgery',title:'Surgical / peri-op notes',help:'Pre-op checklist items, post-op observations and wound status.',
+    fields:[
+      {k:'procedure',l:'Procedure / stage',ph:'e.g. Post-op day 1'},
+      {k:'wound',l:'Wound / drain status',ph:'Clean, dry…'},
+      {k:'pain',l:'Pain / analgesia',ph:'Controlled on PCA'}
+    ]},
+  radiology:{label:'Radiology',title:'Imaging follow-up',help:'Pending scans, contrast notes and critical findings to chase.',
+    fields:[
+      {k:'modality',l:'Modality / study',ph:'CT chest with contrast'},
+      {k:'status',l:'Status',ph:'Pending / reported'},
+      {k:'critical',l:'Critical finding?',ph:'Yes – notify team'}
+    ]},
+  him:{label:'HIM & Stats',title:'Coding & documentation flags',help:'Missing documentation, coding queries and discharge readiness.',
+    fields:[
+      {k:'issue',l:'Documentation issue',ph:'Missing discharge summary'},
+      {k:'owner',l:'Responsible team',ph:'Ward 3 medical'},
+      {k:'deadline',l:'Target resolution',ph:'Before 16:00'}
+    ]}
+};
+
+let active='nursing';
+
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return{}}}
+function save(data){localStorage.setItem(KEY,JSON.stringify(data))}
+
+function renderChips(){
+  $('#dept-chips').innerHTML=Object.entries(DEPTS).map(([k,d])=>
+    `<button data-d="${k}" class="shrink-0 rounded-full border px-4 py-2 text-xs font-bold ${k===active?'border-teal bg-teal text-white':'border-slate-200 bg-white text-slate-500'}">${d.label}</button>`
+  ).join('');
+  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{active=b.dataset.d;draw()});
+}
+
+function drawFields(){
+  const d=DEPTS[active];
+  $('#dept-title').textContent=d.title;
+  $('#dept-help').textContent=d.help;
+  $('#dynamic-fields').innerHTML=d.fields.map(f=>
+    `<label class="grid gap-1 text-xs font-bold">${f.l}${f.u?` <span class="font-normal text-slate-400">${f.u}</span>`:''}
+      <input name="${f.k}" placeholder="${f.ph||''}" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+    </label>`
+  ).join('');
+}
+
+function renderEntries(){
+  const all=load();
+  const list=(all[active]||[]).slice().reverse();
+  const q=($('#filter-code').value||'').trim().toLowerCase();
+  const filtered=q?list.filter(x=>(x.code||'').toLowerCase().includes(q)):list;
+  if(!filtered.length){
+    $('#entries').innerHTML='<p class="text-xs text-slate-400 py-4">No entries yet for this department.</p>';
+  }else{
+    const cols=DEPTS[active].fields.map(f=>f.k);
+    $('#entries').innerHTML=`<table class="w-full text-left text-xs"><thead><tr class="border-b text-slate-400">
+      <th class="py-2 pr-3">Time</th><th class="py-2 pr-3">Code</th>${cols.map(c=>`<th class="py-2 pr-3">${c}</th>`).join('')}
+      <th class="py-2 pr-3">Note</th><th class="py-2 pr-3">Reminder</th><th class="py-2">Pri</th><th></th>
+    </tr></thead><tbody>${filtered.map((x,i)=>`<tr class="border-b border-slate-50">
+      <td class="py-2 pr-3 whitespace-nowrap">${new Date(x.at).toLocaleString()}</td>
+      <td class="py-2 pr-3 font-bold">${x.code||'—'}</td>
+      ${cols.map(c=>`<td class="py-2 pr-3">${x[c]??'—'}</td>`).join('')}
+      <td class="py-2 pr-3 max-w-[160px] truncate">${x.note||'—'}</td>
+      <td class="py-2 pr-3 whitespace-nowrap">${x.reminder?new Date(x.reminder).toLocaleString():'—'}</td>
+      <td class="py-2"><span class="rounded-full px-2 py-0.5 text-[10px] font-bold ${x.priority==='urgent'?'bg-red-100 text-red-700':x.priority==='watch'?'bg-amber-100 text-amber-800':'bg-slate-100 text-slate-600'}">${x.priority||'routine'}</span></td>
+      <td class="py-2"><button data-i="${list.indexOf(x)}" class="del text-[10px] font-bold text-red-600">✕</button></td>
+    </tr>`).join('')}</tbody></table>`;
+    document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{
+      const data=load();
+      const arr=data[active]||[];
+      arr.splice(+b.dataset.i,1);
+      data[active]=arr;save(data);renderEntries();renderReminders();toast('Entry removed');
+    });
+  }
+}
+
+function renderReminders(){
+  const all=load();
+  const now=Date.now();
+  const upcoming=[];
+  Object.keys(DEPTS).forEach(dept=>{
+    (all[dept]||[]).forEach(x=>{
+      if(x.reminder){
+        const t=new Date(x.reminder).getTime();
+        if(t>=now-3600000) upcoming.push({...x,dept,t});
+      }
+    });
+  });
+  upcoming.sort((a,b)=>a.t-b.t);
+  if(!upcoming.length){
+    $('#reminders').innerHTML='<p class="text-slate-400">No upcoming reminders.</p>';
+    return;
+  }
+  $('#reminders').innerHTML=upcoming.slice(0,12).map(x=>{
+    const overdue=x.t<now;
+    return `<div class="rounded-xl border p-3 ${overdue?'border-red-200 bg-red-50':'border-slate-100 bg-slate-50'}">
+      <div class="flex justify-between gap-2"><b>${x.code}</b><span class="text-[10px] font-bold ${overdue?'text-red-600':'text-teal'}">${overdue?'OVERDUE':new Date(x.t).toLocaleString()}</span></div>
+      <p class="mt-1 text-slate-500">${DEPTS[x.dept].label} · ${x.note?x.note.slice(0,60):'Review due'}</p>
+    </div>`;
+  }).join('');
+}
+
+function draw(){renderChips();drawFields();renderEntries();renderReminders()}
+
+$('#entry-form').onsubmit=e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const entry={at:new Date().toISOString(),code:fd.get('code').trim(),note:fd.get('note')||'',reminder:fd.get('reminder')||'',priority:fd.get('priority')||'routine'};
+  DEPTS[active].fields.forEach(f=>{entry[f.k]=fd.get(f.k)||''});
+  const data=load();
+  if(!data[active])data[active]=[];
+  data[active].push(entry);
+  if(data[active].length>200)data[active]=data[active].slice(-200);
+  save(data);
+  e.target.reset();
+  renderEntries();renderReminders();
+  toast('Entry saved locally');
+};
+
+$('#clear-form').onclick=()=>$('#entry-form').reset();
+$('#filter-code').oninput=()=>renderEntries();
+$('#wipe-dept').onclick=()=>{
+  if(!confirm('Clear all entries for '+DEPTS[active].label+'?'))return;
+  const data=load();data[active]=[];save(data);renderEntries();renderReminders();toast('Department data cleared');
+};
+$('#export-csv').onclick=()=>{
+  const list=(load()[active]||[]);
+  if(!list.length){toast('Nothing to export',true);return}
+  const cols=['at','code',...DEPTS[active].fields.map(f=>f.k),'note','reminder','priority'];
+  const rows=[cols.join(',')].concat(list.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(',')));
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`miracardiac-${active}-${Date.now()}.csv`;a.click();
+};
+
+draw();
+
+/* Background animation */
+(function(){
+  const cv=$('#bg'),ctx=cv.getContext('2d');
+  if(!ctx)return;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const COLORS=['#1b9a91','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981'];
+  let W=0,H=0,parts=[],scroll=0,last=performance.now();
+  function mk(init){return{x:Math.random()*W,y:init?Math.random()*H:H+30,s:10+Math.random()*16,vy:.15+Math.random()*.35,vx:(Math.random()-.5)*.2,rot:Math.random()*6.28,vr:(Math.random()-.5)*.01,t:Math.floor(Math.random()*3),c:COLORS[Math.floor(Math.random()*COLORS.length)],a:.12+Math.random()*.14}}
+  function size(){const dpr=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);parts=Array.from({length:W<640?10:18},()=>mk(true));if(reduce)frame(performance.now())}
+  function beat(t){if(t>.10&&t<.20)return .12*Math.sin(Math.PI*(t-.10)/.10);if(t>=.28&&t<.31)return -.15*(t-.28)/.03;if(t>=.31&&t<.35)return -.15+1.15*(t-.31)/.04;if(t>=.35&&t<.40)return 1-1.3*(t-.35)/.05;if(t>=.40&&t<.43)return -.3+.3*(t-.40)/.03;if(t>.52&&t<.70)return .25*Math.sin(Math.PI*(t-.52)/.18);return 0}
+  function ecg(y,amp,period,speed,alpha){const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,'rgba(27,154,145,0)');g.addColorStop(.25,`rgba(27,154,145,${alpha})`);g.addColorStop(.6,`rgba(139,92,246,${alpha})`);g.addColorStop(.85,`rgba(236,72,153,${alpha})`);g.addColorStop(1,'rgba(236,72,153,0)');ctx.strokeStyle=g;ctx.lineWidth=2;ctx.lineJoin='round';ctx.beginPath();for(let x=0;x<=W;x+=3){const ph=((((x+scroll*speed)%period)+period)%period)/period;const yy=y-beat(ph)*amp;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy)}ctx.stroke()}
+  function cross(s){const w=s/3;ctx.beginPath();ctx.rect(-s/2,-w/2,s,w);ctx.rect(-w/2,-s/2,w,s);ctx.fill()}
+  function heart(s){const r=s/2;ctx.beginPath();ctx.moveTo(0,r*.9);ctx.bezierCurveTo(-r*1.6,-r*.2,-r*.7,-r*1.3,0,-r*.5);ctx.bezierCurveTo(r*.7,-r*1.3,r*1.6,-r*.2,0,r*.9);ctx.fill()}
+  function ring(s){ctx.beginPath();ctx.arc(0,0,s/2,0,6.283);ctx.lineWidth=2;ctx.stroke()}
+  function frame(now){const dt=Math.min(50,now-last);last=now;scroll+=dt*.06;ctx.clearRect(0,0,W,H);for(const p of parts){if(!reduce){p.y-=p.vy*dt/16;p.x+=p.vx*dt/16;p.rot+=p.vr*dt/16;if(p.y<-30)Object.assign(p,mk(false))}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=p.a;ctx.fillStyle=p.c;ctx.strokeStyle=p.c;p.t===0?cross(p.s):p.t===1?heart(p.s):ring(p.s);ctx.restore()}ctx.globalAlpha=1;ecg(H*.78,Math.min(40,H*.08),320,1,.28);ecg(H*.22,24,420,.6,.16);if(!reduce)requestAnimationFrame(frame)}
+  size();if(!reduce)requestAnimationFrame(frame);let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth!==W||Math.abs(innerHeight-H)>150)size()},200)});
+})();
+</script>
+</body>
+</html>

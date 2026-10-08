@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: signed-in user
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper: owner accounts (must match OWNER_EMAILS in admin.html)
+    // Replace the emails below with your real owner addresses.
+    function isOwner() {
+      return isSignedIn()
+        && request.auth.token.email in [
+          'admin@example.com',
+          'owner@yourclinic.org'
+        ];
+    }
+
+    // Brand / campaign assets – owners only write; everyone can read public logo/ads
+    match /brand/{docId} {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
+    // Optional cloud patient records (localStorage is primary)
+    // Structure: patients/{patientId}
+    // Fields: dept, nameOrCode, notes, vitals[], reminders[], meds[], updatedAt, createdBy
+    match /patients/{patientId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['dept', 'updatedAt'])
+        && request.resource.data.dept is string
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isSignedIn()
+        && resource.data.createdBy == request.auth.uid
+        || isOwner();
+      allow delete: if isOwner()
+        || (isSignedIn() && resource.data.createdBy == request.auth.uid);
+    }
+
+    // Medication administration / follow-up logs
+    // Structure: medLogs/{logId}
+    match /medLogs/{logId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasAll(['patientCode', 'drug', 'time', 'createdBy'])
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isOwner()
+        || (isSignedIn() && resource.data.createdBy == request.auth.uid);
+    }
+
+    // Customer-care / support messages (optional cloud copy)
+    match /support/{msgId} {
+      allow read: if isOwner();
+      allow create: if isSignedIn()
+        || request.resource.data.keys().hasAll(['name', 'email', 'message', 'createdAt']);
+      allow update, delete: if isOwner();
+    }
+
+    // Calculation history (optional sync – prefer localStorage)
+    match /calcHistory/{uid}/{docId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Deny everything else by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

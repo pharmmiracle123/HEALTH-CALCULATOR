@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Drug follow-up · Miracardiac</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6f73">
+<link rel="manifest" href="public/manifest.webmanifest">
+<link rel="icon" href="public/icon-192.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Manrope','sans-serif']},colors:{teal:'#0b6f73',ink:'#172b3b'}}}};</script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{background:radial-gradient(circle at 80% 0,#eaf8f5,transparent 26rem),#f5f8fb}
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#shell{position:relative;z-index:1}
+.glass{background:#ffffffdd;backdrop-filter:blur(12px)}
+.toast{animation:in .25s}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body class="min-w-[320px] text-ink font-sans">
+<canvas id="bg" aria-hidden="true"></canvas>
+<div id="shell" class="md:grid md:grid-cols-[250px_1fr]">
+
+  <aside class="border-b border-slate-200 bg-white p-4 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:p-6">
+    <a href="index.html" class="flex items-center gap-3 pb-6 no-underline">
+      <b class="grid h-10 w-10 place-items-center rounded-[13px] bg-gradient-to-br from-[#1b9a91] to-teal font-display text-xl text-white shadow-lg">M</b>
+      <span class="hidden md:block"><strong class="block font-display">Miracardiac</strong><small class="text-[8px] font-extrabold tracking-widest text-slate-400">CLINICAL INTELLIGENCE</small></span>
+    </a>
+    <nav class="hidden md:block">
+      <p class="text-[9px] font-extrabold tracking-widest text-slate-400">WORKSPACE</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="dashboard.html">⌘ Dashboard</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="calculator.html">＋ Calculator</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="patient-records.html">📋 Patient records</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold bg-[#f1faf7] text-teal" href="medication.html">💊 Drug follow-up</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="handover.html">🔄 Shift handover</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="customer-care.html">♡ Customer care</a>
+      <p class="mt-5 text-[9px] font-extrabold tracking-widest text-slate-400">MANAGEMENT</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="admin.html">⚙ Admin studio</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="settings.html">◈ Settings</a>
+    </nav>
+    <div class="mt-auto hidden md:block">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-[10px] text-[#958b7c]">
+        <b class="text-[#976f39]">✦ Safety first</b>
+        <p class="mt-1">High-alert medicines need independent double-check. This is decision support only.</p>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <header class="glass sticky top-0 z-10 flex min-h-[76px] items-center justify-between border-b border-slate-200 px-5 md:px-[4vw]">
+      <div>
+        <small class="font-bold tracking-widest text-slate-400">MIRACARDIAC / <b class="text-teal">WORKSPACE</b></small>
+        <h1 class="font-display font-extrabold">Medication follow-up (MAR)</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="user-pill" class="hidden rounded-full border border-[#d3eee7] bg-[#f1faf7] px-3 py-2 text-[10px] font-bold text-[#43836f] sm:block">Local session</span>
+        <button id="logout" class="text-[10px] font-bold text-slate-500">Log out</button>
+        <b class="grid h-8 w-8 place-items-center rounded-full bg-[#dceef0] text-[10px] text-[#376a77]">MC</b>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-6xl px-5 py-8 md:px-[4vw]">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-xs text-[#8a6d3b] mb-6">
+        <b>Privacy & safety:</b> Use bed/code only. Always verify the written order, allergy status and local high-alert policy before administration.
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-[1fr_300px]">
+        <div class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+          <p class="text-[10px] font-extrabold tracking-widest text-teal">LOG ADMINISTRATION / FOLLOW-UP</p>
+          <h2 class="mt-2 font-display text-xl font-extrabold">Record a dose or check</h2>
+          <form id="med-form" class="mt-5 grid gap-4 sm:grid-cols-2">
+            <label class="grid gap-1 text-xs font-bold">Patient code / bed
+              <input name="code" required placeholder="Bed 7-B" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+            </label>
+            <label class="grid gap-1 text-xs font-bold">Drug name
+              <input name="drug" required placeholder="e.g. Paracetamol 1 g" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+            </label>
+            <label class="grid gap-1 text-xs font-bold">Dose & route
+              <input name="dose" placeholder="1 g PO / 5 mg IV" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+            </label>
+            <label class="grid gap-1 text-xs font-bold">Scheduled time
+              <input name="scheduled" type="datetime-local" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+            </label>
+            <label class="grid gap-1 text-xs font-bold">Status
+              <select name="status" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+                <option value="given">Given</option>
+                <option value="held">Held</option>
+                <option value="refused">Refused</option>
+                <option value="missed">Missed</option>
+                <option value="due">Due / pending</option>
+                <option value="level">Level / trough taken</option>
+              </select>
+            </label>
+            <label class="grid gap-1 text-xs font-bold">Given / checked at
+              <input name="at" type="datetime-local" class="h-10 rounded-lg border border-slate-200 px-3 text-sm">
+            </label>
+            <label class="grid gap-1 text-xs font-bold sm:col-span-2">Notes (reaction, reason held, double-check initials…)
+              <textarea name="note" rows="2" class="rounded-lg border border-slate-200 p-3 text-sm"></textarea>
+            </label>
+            <label class="flex items-center gap-2 text-xs font-bold sm:col-span-2">
+              <input type="checkbox" name="highAlert" class="rounded"> High-alert medicine (independent double-check required)
+            </label>
+            <div class="sm:col-span-2 flex gap-2">
+              <button class="rounded-xl bg-teal py-3 px-6 text-xs font-bold text-white">Save log →</button>
+              <button type="button" id="clear-med" class="rounded-xl border border-slate-200 px-4 text-xs font-bold text-slate-500">Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+          <p class="text-[10px] font-extrabold tracking-widest text-teal">DUE / PENDING</p>
+          <div id="due-list" class="mt-4 space-y-2 text-xs"></div>
+          <hr class="my-4">
+          <p class="text-[10px] font-extrabold tracking-widest text-amber-700">HIGH-ALERT RECENT</p>
+          <div id="ha-list" class="mt-3 space-y-2 text-xs"></div>
+        </aside>
+      </div>
+
+      <section class="mt-6 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm backdrop-blur-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h3 class="font-display font-extrabold">Medication log</h3>
+          <div class="flex gap-2">
+            <input id="med-filter" placeholder="Filter code or drug…" class="h-9 rounded-lg border border-slate-200 px-3 text-xs">
+            <button id="export-med" class="rounded-lg border border-[#cfe8e3] bg-[#f1fbf8] px-3 text-xs font-bold text-teal">Export CSV</button>
+            <button id="wipe-med" class="rounded-lg border border-red-200 px-3 text-xs font-bold text-red-700">Clear all</button>
+          </div>
+        </div>
+        <div id="med-table" class="mt-4 overflow-x-auto"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const toast=(x,b=false)=>{let n=document.createElement('div');n.className='toast fixed bottom-5 right-5 z-50 rounded-xl px-4 py-3 text-xs text-white shadow-2xl '+(b?'bg-red-700':'bg-[#183b4a]');n.textContent=x;document.body.append(n);setTimeout(()=>n.remove(),3500)};
+if($('#logout'))$('#logout').onclick=()=>{localStorage.removeItem('mc-user');location.href='login.html'};
+if($('#user-pill'))$('#user-pill').textContent=localStorage.getItem('mc-user')||'Guest mode';
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('public/sw.js').catch(()=>{}));
+
+const KEY='mc-med-log-v1';
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return[]}}
+function save(a){localStorage.setItem(KEY,JSON.stringify(a.slice(-300)))}
+
+function statusBadge(s){
+  const map={given:'bg-emerald-100 text-emerald-800',held:'bg-amber-100 text-amber-800',refused:'bg-red-100 text-red-700',missed:'bg-red-100 text-red-700',due:'bg-blue-100 text-blue-800',level:'bg-violet-100 text-violet-800'};
+  return `<span class="rounded-full px-2 py-0.5 text-[10px] font-bold ${map[s]||'bg-slate-100'}">${s}</span>`;
+}
+
+function render(){
+  const all=load().slice().reverse();
+  const q=($('#med-filter').value||'').trim().toLowerCase();
+  const list=q?all.filter(x=>((x.code||'')+(x.drug||'')).toLowerCase().includes(q)):all;
+
+  // Due / pending
+  const due=all.filter(x=>x.status==='due').slice(0,8);
+  $('#due-list').innerHTML=due.length?due.map(x=>`<div class="rounded-xl border border-blue-100 bg-blue-50 p-3"><b>${x.code}</b> · ${x.drug}<p class="text-slate-500 mt-1">${x.scheduled?new Date(x.scheduled).toLocaleString():'No time set'}</p></div>`).join(''):'<p class="text-slate-400">No pending doses logged.</p>';
+
+  // High-alert
+  const ha=all.filter(x=>x.highAlert).slice(0,6);
+  $('#ha-list').innerHTML=ha.length?ha.map(x=>`<div class="rounded-xl border border-amber-200 bg-amber-50 p-3"><b>${x.code}</b> · ${x.drug} ${statusBadge(x.status)}</div>`).join(''):'<p class="text-slate-400">None recently.</p>';
+
+  if(!list.length){
+    $('#med-table').innerHTML='<p class="text-xs text-slate-400 py-4">No medication logs yet.</p>';
+    return;
+  }
+  $('#med-table').innerHTML=`<table class="w-full text-left text-xs"><thead><tr class="border-b text-slate-400">
+    <th class="py-2 pr-3">Logged</th><th class="py-2 pr-3">Code</th><th class="py-2 pr-3">Drug</th><th class="py-2 pr-3">Dose</th>
+    <th class="py-2 pr-3">Status</th><th class="py-2 pr-3">Scheduled</th><th class="py-2 pr-3">Given at</th><th class="py-2 pr-3">HA</th><th class="py-2">Note</th><th></th>
+  </tr></thead><tbody>${list.map((x,idx)=>{
+    const realIdx=load().indexOf(x);
+    return `<tr class="border-b border-slate-50">
+      <td class="py-2 pr-3 whitespace-nowrap">${new Date(x.loggedAt).toLocaleString()}</td>
+      <td class="py-2 pr-3 font-bold">${x.code}</td>
+      <td class="py-2 pr-3">${x.drug}</td>
+      <td class="py-2 pr-3">${x.dose||'—'}</td>
+      <td class="py-2 pr-3">${statusBadge(x.status)}</td>
+      <td class="py-2 pr-3 whitespace-nowrap">${x.scheduled?new Date(x.scheduled).toLocaleString():'—'}</td>
+      <td class="py-2 pr-3 whitespace-nowrap">${x.at?new Date(x.at).toLocaleString():'—'}</td>
+      <td class="py-2 pr-3">${x.highAlert?'⚠':''}</td>
+      <td class="py-2 pr-3 max-w-[140px] truncate">${x.note||'—'}</td>
+      <td class="py-2"><button data-i="${realIdx}" class="del text-[10px] font-bold text-red-600">✕</button></td>
+    </tr>`;
+  }).join('')}</tbody></table>`;
+  document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{
+    const a=load();a.splice(+b.dataset.i,1);save(a);render();toast('Removed');
+  });
+}
+
+$('#med-form').onsubmit=e=>{
+  e.preventDefault();
+  const fd=new FormData(e.target);
+  const entry={
+    loggedAt:new Date().toISOString(),
+    code:fd.get('code').trim(),
+    drug:fd.get('drug').trim(),
+    dose:fd.get('dose')||'',
+    scheduled:fd.get('scheduled')||'',
+    status:fd.get('status'),
+    at:fd.get('at')||'',
+    note:fd.get('note')||'',
+    highAlert:!!fd.get('highAlert')
+  };
+  const a=load();a.push(entry);save(a);
+  e.target.reset();render();toast('Medication log saved');
+};
+$('#clear-med').onclick=()=>$('#med-form').reset();
+$('#med-filter').oninput=render;
+$('#wipe-med').onclick=()=>{if(confirm('Clear entire medication log?')){save([]);render();toast('Cleared')}};
+$('#export-med').onclick=()=>{
+  const list=load();
+  if(!list.length){toast('Nothing to export',true);return}
+  const cols=['loggedAt','code','drug','dose','status','scheduled','at','highAlert','note'];
+  const rows=[cols.join(',')].concat(list.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(',')));
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`miracardiac-meds-${Date.now()}.csv`;a.click();
+};
+render();
+
+(function(){
+  const cv=$('#bg'),ctx=cv.getContext('2d');
+  if(!ctx)return;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const COLORS=['#1b9a91','#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981'];
+  let W=0,H=0,parts=[],scroll=0,last=performance.now();
+  function mk(init){return{x:Math.random()*W,y:init?Math.random()*H:H+30,s:10+Math.random()*16,vy:.15+Math.random()*.35,vx:(Math.random()-.5)*.2,rot:Math.random()*6.28,vr:(Math.random()-.5)*.01,t:Math.floor(Math.random()*3),c:COLORS[Math.floor(Math.random()*COLORS.length)],a:.12+Math.random()*.14}}
+  function size(){const dpr=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);parts=Array.from({length:W<640?10:18},()=>mk(true));if(reduce)frame(performance.now())}
+  function beat(t){if(t>.10&&t<.20)return .12*Math.sin(Math.PI*(t-.10)/.10);if(t>=.28&&t<.31)return -.15*(t-.28)/.03;if(t>=.31&&t<.35)return -.15+1.15*(t-.31)/.04;if(t>=.35&&t<.40)return 1-1.3*(t-.35)/.05;if(t>=.40&&t<.43)return -.3+.3*(t-.40)/.03;if(t>.52&&t<.70)return .25*Math.sin(Math.PI*(t-.52)/.18);return 0}
+  function ecg(y,amp,period,speed,alpha){const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,'rgba(27,154,145,0)');g.addColorStop(.25,`rgba(27,154,145,${alpha})`);g.addColorStop(.6,`rgba(139,92,246,${alpha})`);g.addColorStop(.85,`rgba(236,72,153,${alpha})`);g.addColorStop(1,'rgba(236,72,153,0)');ctx.strokeStyle=g;ctx.lineWidth=2;ctx.lineJoin='round';ctx.beginPath();for(let x=0;x<=W;x+=3){const ph=((((x+scroll*speed)%period)+period)%period)/period;const yy=y-beat(ph)*amp;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy)}ctx.stroke()}
+  function cross(s){const w=s/3;ctx.beginPath();ctx.rect(-s/2,-w/2,s,w);ctx.rect(-w/2,-s/2,w,s);ctx.fill()}
+  function heart(s){const r=s/2;ctx.beginPath();ctx.moveTo(0,r*.9);ctx.bezierCurveTo(-r*1.6,-r*.2,-r*.7,-r*1.3,0,-r*.5);ctx.bezierCurveTo(r*.7,-r*1.3,r*1.6,-r*.2,0,r*.9);ctx.fill()}
+  function ring(s){ctx.beginPath();ctx.arc(0,0,s/2,0,6.283);ctx.lineWidth=2;ctx.stroke()}
+  function frame(now){const dt=Math.min(50,now-last);last=now;scroll+=dt*.06;ctx.clearRect(0,0,W,H);for(const p of parts){if(!reduce){p.y-=p.vy*dt/16;p.x+=p.vx*dt/16;p.rot+=p.vr*dt/16;if(p.y<-30)Object.assign(p,mk(false))}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=p.a;ctx.fillStyle=p.c;ctx.strokeStyle=p.c;p.t===0?cross(p.s):p.t===1?heart(p.s):ring(p.s);ctx.restore()}ctx.globalAlpha=1;ecg(H*.78,Math.min(40,H*.08),320,1,.28);ecg(H*.22,24,420,.6,.16);if(!reduce)requestAnimationFrame(frame)}
+  size();if(!reduce)requestAnimationFrame(frame);let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(innerWidth!==W||Math.abs(innerHeight-H)>150)size()},200)});
+})();
+</script>
+</body>
+</html>

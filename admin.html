@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Admin studio · Miracardiac</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b6f73">
+<link rel="manifest" href="public/manifest.webmanifest">
+<link rel="icon" href="public/icon-192.svg">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Manrope','sans-serif']},colors:{teal:'#0b6f73',ink:'#172b3b'}}}};
+</script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+body{background:radial-gradient(circle at 80% 0,#eaf8f5,transparent 26rem),#f5f8fb}
+.glass{background:#ffffffdd;backdrop-filter:blur(12px)}
+.toast{animation:in .25s}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body class="min-w-[320px] text-ink font-sans">
+<div class="md:grid md:grid-cols-[250px_1fr]">
+
+  <!-- SIDEBAR -->
+  <aside class="border-b border-slate-200 bg-white p-4 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:p-6">
+    <a href="index.html" class="flex items-center gap-3 pb-6 no-underline">
+      <b id="side-logo" class="grid h-10 w-10 place-items-center overflow-hidden rounded-[13px] bg-gradient-to-br from-[#1b9a91] to-teal font-display text-xl text-white shadow-lg">M</b>
+      <span class="hidden md:block">
+        <strong class="block font-display">Miracardiac</strong>
+        <small class="text-[8px] font-extrabold tracking-widest text-slate-400">CLINICAL INTELLIGENCE</small>
+      </span>
+    </a>
+    <nav class="hidden md:block">
+      <p class="text-[9px] font-extrabold tracking-widest text-slate-400">WORKSPACE</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="dashboard.html">⌘ Dashboard</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="calculator.html">＋ Calculator</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="patient-records.html">📋 Patient records</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="medication.html">💊 Drug follow-up</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="handover.html">🔄 Shift handover</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="customer-care.html">♡ Customer care</a>
+      <p class="mt-5 text-[9px] font-extrabold tracking-widest text-slate-400">MANAGEMENT</p>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="admin.html">⚙　Admin studio</a>
+      <a class="block rounded-xl px-3 py-3 text-xs font-bold text-slate-500 hover:bg-slate-50" href="settings.html">◐　Settings</a>
+    </nav>
+    <div class="mt-auto hidden md:block">
+      <div class="rounded-xl border border-[#e9e1d6] bg-[#fffaf2] p-3 text-[10px] text-[#958b7c]">
+        <b class="text-[#976f39]">✦ Safety first</b>
+        <p class="mt-1">Decision support only. Verify local policy and patient context.</p>
+      </div>
+      <button id="install" hidden class="mt-3 w-full rounded-lg border border-[#cfe8e3] bg-[#f1fbf8] p-2 text-[10px] font-bold text-teal">⇩ Install app</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <header class="glass sticky top-0 z-10 flex min-h-[76px] items-center justify-between border-b border-slate-200 px-5 md:px-[4vw]">
+      <div>
+        <small class="font-bold tracking-widest text-slate-400">MIRACARDIAC / <b class="text-teal">WORKSPACE</b></small>
+        <h1 class="font-display font-extrabold">Admin studio</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="user-pill" class="hidden rounded-full border border-[#d3eee7] bg-[#f1faf7] px-3 py-2 text-[10px] font-bold text-[#43836f] sm:block">Local session</span>
+        <button id="logout" class="text-[10px] font-bold text-slate-500">Log out</button>
+        <b class="grid h-8 w-8 place-items-center rounded-full bg-[#dceef0] text-[10px] text-[#376a77]">MC</b>
+      </div>
+    </header>
+
+    <!-- LOADING -->
+    <div id="loading" class="mx-auto max-w-md px-5 py-20 text-center text-sm text-slate-400">Loading…</div>
+
+    <!-- OWNER LOGIN -->
+    <div id="gate" class="mx-auto hidden max-w-md px-5 py-12">
+      <p class="text-[10px] font-extrabold tracking-widest text-teal">OWNER ACCESS</p>
+      <h2 class="mt-2 font-display text-3xl font-extrabold">Sign in to Admin studio</h2>
+      <p class="mt-2 text-sm text-slate-500">Only approved owner accounts can open this page.</p>
+      <form id="login" class="mt-6 grid gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <input required name="email" type="email" autocomplete="username" placeholder="Owner email" class="h-11 rounded-xl border border-slate-200 px-3 text-base sm:text-sm">
+        <input required name="password" type="password" autocomplete="current-password" placeholder="Password" class="h-11 rounded-xl border border-slate-200 px-3 text-base sm:text-sm">
+        <p id="gate-msg" class="hidden rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700"></p>
+        <button id="login-btn" class="rounded-xl bg-teal py-3 text-sm font-bold text-white">Sign in →</button>
+      </form>
+    </div>
+
+    <!-- ADMIN CONTENT -->
+    <div id="app" class="mx-auto hidden max-w-5xl px-5 py-10 md:px-[4vw]">
+      <p class="text-[10px] font-extrabold tracking-widest text-teal">OWNER CONTROLS</p>
+      <h2 class="mt-2 font-display text-4xl font-extrabold">Brand & campaigns</h2>
+      <p id="mode-note" class="mt-2 text-sm text-slate-500"></p>
+      <p id="local-warn" class="mt-4 hidden rounded-xl bg-amber-50 p-3 text-xs font-semibold text-amber-800">
+        ⚠ Local mode: Firebase is not set up, so this page is not password-protected and changes are saved in this browser only. Fill in CONFIG.firebase and OWNER_EMAILS in the script to go online.
+      </p>
+
+      <section class="mt-8 grid gap-5 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-2">
+        <div>
+          <label class="grid gap-2 text-xs font-bold">Logo image
+            <input id="logo" type="file" accept="image/*" class="rounded-lg border border-dashed p-2 text-xs">
+          </label>
+          <div id="logo-preview" class="mt-4 grid h-24 w-24 place-items-center overflow-hidden rounded-2xl bg-teal font-display text-4xl font-bold text-white">M</div>
+          <button id="logo-reset" type="button" class="mt-3 text-xs font-bold text-red-700">Remove logo</button>
+        </div>
+        <div>
+          <label class="grid gap-2 text-xs font-bold">Advertising images (up to 10)
+            <input id="ads" type="file" accept="image/*" multiple class="rounded-lg border border-dashed p-2 text-xs">
+          </label>
+          <p class="mt-2 text-xs text-slate-400">The preview rotates every 4 seconds.</p>
+          <div id="preview" class="mt-4 grid h-40 place-items-center overflow-hidden rounded-xl border bg-slate-50 text-xs text-slate-400">No campaign images yet</div>
+          <div id="list" class="mt-3 grid grid-cols-3 gap-2"></div>
+        </div>
+      </section>
+
+      <section class="mt-5 rounded-2xl border border-slate-200 bg-white p-6">
+        <h3 class="font-display font-extrabold">Inline integration settings</h3>
+        <p class="mt-2 text-xs text-slate-500">Edit CONFIG and OWNER_EMAILS at the top of this page's script. Never put private API secrets in client-side HTML.</p>
+        <pre class="mt-4 overflow-auto rounded-xl bg-slate-900 p-4 text-xs text-emerald-300">CONFIG.firebase = { apiKey, authDomain, projectId, ... };
+CONFIG.cloudinary.cloudName = 'your-cloud';
+CONFIG.cloudinary.uploadPreset = 'unsigned-preset';
+OWNER_EMAILS = ['you@example.com'];</pre>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+/* ---------- SETTINGS: EDIT THESE ---------- */
+const CONFIG={firebase:{apiKey:'',authDomain:'',projectId:'',storageBucket:'',messagingSenderId:'',appId:''},cloudinary:{cloudName:'',uploadPreset:''}};
+const OWNER_EMAILS=['']; // example: ['you@example.com']
+
+/* ---------- BASICS ---------- */
+const $=s=>document.querySelector(s);
+const toast=(x,b=false)=>{let n=document.createElement('div');n.className='toast fixed bottom-5 right-5 z-50 rounded-xl px-4 py-3 text-xs text-white shadow-2xl '+(b?'bg-red-700':'bg-[#183b4a]');n.textContent=x;document.body.append(n);setTimeout(()=>n.remove(),3500)};
+if($('#user-pill'))$('#user-pill').textContent=localStorage.getItem('mc-user')||'Guest mode';
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('public/sw.js').catch(()=>{}));
+
+const fbReady=()=>!!(CONFIG.firebase.apiKey&&CONFIG.firebase.projectId)&&typeof firebase!=='undefined';
+const cloudReady=()=>!!(CONFIG.cloudinary.cloudName&&CONFIG.cloudinary.uploadPreset);
+let mode='local',auth=null,db=null;
+const state={logo:'',ads:[]};
+
+const readLS=(k,fallback)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?fallback:v}catch(e){return fallback}};
+const cleanAds=a=>(Array.isArray(a)?a:[]).filter(x=>typeof x==='string'&&x&&!x.startsWith('blob:'));
+
+/* ---------- LOGOUT (also signs out of Firebase) ---------- */
+$('#logout').onclick=async()=>{
+  try{if(auth)await auth.signOut()}catch(e){}
+  localStorage.removeItem('mc-user');
+  location.href='login.html';
+};
+
+/* ---------- SCREENS ---------- */
+function showApp(){
+  $('#loading').classList.add('hidden');$('#gate').classList.add('hidden');$('#app').classList.remove('hidden');
+  $('#local-warn').classList.toggle('hidden',mode!=='local');
+  $('#mode-note').textContent=mode==='cloud'
+    ?'Signed in as owner. Changes are saved online and appear for every visitor.'
+    :'Images are saved on this device. Connect Firebase and Cloudinary to publish them online.';
+  render();
+}
+function showGate(msg){
+  $('#loading').classList.add('hidden');$('#app').classList.add('hidden');$('#gate').classList.remove('hidden');
+  const m=$('#gate-msg');
+  if(msg){m.textContent=msg;m.classList.remove('hidden')}else m.classList.add('hidden');
+}
+
+/* ---------- SAVE / LOAD ---------- */
+async function loadState(){
+  if(mode==='cloud'){
+    const s=await db.doc('brand/settings').get();
+    const d=s.exists?s.data():{};
+    state.logo=typeof d.logo==='string'?d.logo:'';
+    state.ads=cleanAds(d.ads);
+  }else{
+    const l=readLS('mc-logo','');
+    state.logo=typeof l==='string'?l:'';
+    state.ads=cleanAds(readLS('mc-ads',[]));
+  }
+}
+async function persist(){
+  if(mode==='cloud'){
+    await db.doc('brand/settings').set({logo:state.logo,ads:state.ads,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  }
+  // keep a copy on this device (other pages use it as a fast cache)
+  try{
+    state.logo?localStorage.setItem('mc-logo',JSON.stringify(state.logo)):localStorage.removeItem('mc-logo');
+    localStorage.setItem('mc-ads',JSON.stringify(state.ads));
+  }catch(e){
+    if(mode==='local')throw Error('Storage is full. Remove some images and try again.');
+  }
+}
+// Applies a change, saves it, and undoes it if saving fails
+async function commit(change,okMsg){
+  const before=JSON.stringify(state);
+  try{change();await persist();render();if(okMsg)toast(okMsg);return true}
+  catch(e){Object.assign(state,JSON.parse(before));render();toast(e.message||'Could not save.',true);return false}
+}
+
+/* ---------- IMAGES ---------- */
+function shrink(file,max,type,q){
+  return new Promise((res,rej)=>{
+    const img=new Image(),u=URL.createObjectURL(file);
+    img.onload=()=>{
+      const s=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');
+      c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+      const g=c.getContext('2d');
+      if(type==='image/jpeg'){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height)}
+      g.drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(u);res(c.toDataURL(type,q));
+    };
+    img.onerror=()=>{URL.revokeObjectURL(u);rej(Error('Could not read that image.'))};
+    img.src=u;
+  });
+}
+async function upload(f){
+  const c=CONFIG.cloudinary,d=new FormData();
+  d.append('file',f);d.append('upload_preset',c.uploadPreset);
+  const r=await fetch(`https://api.cloudinary.com/v1_1/${c.cloudName}/image/upload`,{method:'POST',body:d});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.secure_url)throw Error((j.error&&j.error.message)||'Cloudinary upload failed.');
+  return j.secure_url;
+}
+// Online mode needs Cloudinary (Firestore is too small for raw images)
+async function toUrl(f,kind){
+  if(cloudReady())return upload(f);
+  if(mode==='cloud')throw Error('Add your Cloudinary settings to host images online.');
+  return kind==='logo'?shrink(f,256,'image/png'):shrink(f,900,'image/jpeg',0.7);
+}
+
+/* ---------- DRAWING ---------- */
+let idx=0,timer;
+function render(){
+  // logo (admin preview + sidebar)
+  for(const box of [$('#logo-preview'),$('#side-logo')]){
+    box.textContent='';
+    if(state.logo){const im=new Image();im.src=state.logo;im.alt='Logo';im.className='h-full w-full object-cover';box.append(im)}
+    else box.textContent='M';
+  }
+  // campaigns
+  const a=state.ads,p=$('#preview'),list=$('#list');
+  clearInterval(timer);list.innerHTML='';
+  if(!a.length){p.textContent='No campaign images yet';return}
+  idx=idx%a.length;
+  const show=()=>{p.textContent='';const im=new Image();im.className='h-full w-full object-cover';im.alt='Campaign';im.src=a[idx];p.append(im)};
+  show();
+  if(a.length>1)timer=setInterval(()=>{idx=(idx+1)%a.length;show()},4000);
+  a.forEach((src,i)=>{
+    const w=document.createElement('div');w.className='overflow-hidden rounded-lg border';
+    const im=new Image();im.src=src;im.alt='Campaign '+(i+1);im.className='h-16 w-full object-cover';
+    const b=document.createElement('button');b.type='button';b.textContent='Remove';b.className='w-full py-1 text-[10px] font-bold text-red-700';
+    b.onclick=()=>commit(()=>{state.ads=state.ads.filter((_,j)=>j!==i)},'Image removed');
+    w.append(im,b);list.append(w);
+  });
+}
+
+/* ---------- EVENTS ---------- */
+$('#logo').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const url=await toUrl(f,'logo');await commit(()=>{state.logo=url},'Logo saved')}
+  catch(x){toast(x.message,true)}
+  e.target.value='';
+};
+$('#logo-reset').onclick=()=>commit(()=>{state.logo=''},'Logo removed');
+
+$('#ads').onchange=async e=>{
+  const files=[...e.target.files],urls=[];
+  for(const f of files){
+    if(state.ads.length+urls.length>=10){toast('Limit reached: 10 images.',true);break}
+    try{urls.push(await toUrl(f,'ad'))}catch(x){toast(x.message,true);if(mode==='cloud'&&!cloudReady())break}
+  }
+  if(urls.length)await commit(()=>{state.ads=state.ads.concat(urls)},urls.length+' image'+(urls.length>1?'s':'')+' added');
+  e.target.value='';
+};
+
+$('#login').onsubmit=async e=>{
+  e.preventDefault();
+  const f=e.target,btn=$('#login-btn');
+  btn.disabled=true;btn.textContent='Signing in…';
+  try{await auth.signInWithEmailAndPassword(f.email.value.trim(),f.password.value)}
+  catch(x){
+    const c=x.code||'';
+    showGate(c.includes('too-many')?'Too many attempts. Wait a few minutes and try again.':c.includes('network')?'No connection. Check your internet and try again.':'Wrong email or password.');
+  }
+  btn.disabled=false;btn.textContent='Sign in →';
+};
+
+/* ---------- START ---------- */
+(async function start(){
+  if(fbReady()){
+    mode='cloud';
+    firebase.initializeApp(CONFIG.firebase);
+    auth=firebase.auth();db=firebase.firestore();
+    const owners=OWNER_EMAILS.filter(Boolean).map(x=>x.toLowerCase());
+    auth.onAuthStateChanged(async u=>{
+      if(!u){showGate();return}
+      if(!owners.includes((u.email||'').toLowerCase())){
+        await auth.signOut();
+        showGate('This account is not an approved owner account.');
+        return;
+      }
+      $('#user-pill').textContent=u.email;
+      try{await loadState();showApp()}
+      catch(x){showGate('Could not load data. Check your Firestore rules and connection.')}
+    });
+  }else{
+    mode='local';
+    await loadState();
+    showApp();
+  }
+})();
+</script>
+</body>
+</html>
